@@ -20,6 +20,7 @@ const options: swaggerJsdoc.Options = {
       { name: 'SensorData' },
       { name: 'Subscriptions' },
     ],
+    servers: [{ url: 'http://localhost:4000', description: 'Local development' }],
     components: {
       securitySchemes: {
         bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },

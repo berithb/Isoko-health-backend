@@ -1,4 +1,5 @@
-﻿import OpenAI from 'openai';
+import OpenAI from 'openai';
+import type { EasyInputMessage } from 'openai/resources/responses/responses';
 import { env } from '../config';
 import { ApiError } from '../utils/apiError';
 
@@ -14,7 +15,7 @@ type PromptConfig = { system: string; buildUserMessage: (payload: any) => string
 const promptMap: Record<AiFeature, PromptConfig> = {
   symptom_checker: {
     system:
-      'You are a medical triage assistant. Based on symptoms, suggest urgency level (emergency/soon/routine) and relevant specialist. Never diagnose — always recommend seeing a doctor.',
+      'You are a medical triage assistant. Based on symptoms, suggest urgency level (emergency/soon/routine) and relevant specialist. Never diagnose; always recommend seeing a doctor.',
     buildUserMessage: (payload) => `Patient symptoms: ${payload?.symptoms ?? ''}`,
   },
   history_summary: {
@@ -24,7 +25,7 @@ const promptMap: Record<AiFeature, PromptConfig> = {
   },
   chronic_monitoring: {
     system:
-      'You are a health monitoring assistant. Analyze the patient\'s last 7 days of glucose/BP readings and determine if they are in a safe range. Flag anomalies clearly.',
+      "You are a health monitoring assistant. Analyze the patient's last 7 days of glucose/BP readings and determine if they are in a safe range. Flag anomalies clearly.",
     buildUserMessage: (payload) => `Patient data: ${JSON.stringify(payload?.healthLogs ?? {})}`,
   },
   lab_explainer: {
@@ -53,16 +54,17 @@ export const runFeature = async (feature: AiFeature, payload: any, previewOnly =
   if (previewOnly) return { ...base, reply: undefined };
 
   const client = getClient();
+  const input: EasyInputMessage[] = [
+    { role: 'system', content: config.system },
+    { role: 'user', content: userMessage },
+  ];
 
   const response = await client.responses.create({
     model: 'gpt-4.1-mini',
-    input: [
-      { role: 'system', content: config.system },
-      { role: 'user', content: userMessage },
-    ],
+    input,
   });
 
-  const text = response.output?.[0]?.content?.[0]?.text;
+  const text = response.output_text?.trim();
   if (!text) throw new ApiError(502, 'Empty response from OpenAI');
 
   return { ...base, reply: text };

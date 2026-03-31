@@ -33,55 +33,25 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchHistory = exports.fetchLatest = exports.create = exports.index = void 0;
-const socket_1 = require("../realtime/socket");
+exports.emitSensorData = exports.registerSocketServer = void 0;
 const SensorDataService = __importStar(require("../services/sensorData.service"));
-const index = (_req, res) => {
-    res.json({
-        status: 'ok',
-        message: 'Sensor data API is available.',
-        endpoints: {
-            post: '/api/v1/data',
-            latest: '/api/v1/data/latest',
-            history: '/api/v1/data/history',
-        },
+let io = null;
+const registerSocketServer = (socketServer) => {
+    io = socketServer;
+    io.on('connection', async (socket) => {
+        console.log(`React client connected: ${socket.id}`);
+        try {
+            const latest = await SensorDataService.fetchLatestSensorReading();
+            socket.emit('initial-data', latest);
+        }
+        catch (error) {
+            console.error('Failed to load initial sensor data for socket client', error);
+            socket.emit('initial-data', null);
+        }
     });
 };
-exports.index = index;
-const create = async (req, res, next) => {
-    try {
-        const reading = await SensorDataService.createSensorReading(req.body);
-        (0, socket_1.emitSensorData)(typeof reading.toJSON === 'function' ? reading.toJSON() : reading);
-        res.status(201).json({ status: 'success', id: String(reading._id) });
-    }
-    catch (err) {
-        next(err);
-    }
+exports.registerSocketServer = registerSocketServer;
+const emitSensorData = (payload) => {
+    io?.emit('new-data', payload);
 };
-exports.create = create;
-const fetchLatest = async (_req, res, next) => {
-    try {
-        const latest = await SensorDataService.fetchLatestSensorReading();
-        if (!latest) {
-            return res.json({ status: 'empty' });
-        }
-        return res.json(latest);
-    }
-    catch (err) {
-        next(err);
-    }
-};
-exports.fetchLatest = fetchLatest;
-const fetchHistory = async (req, res, next) => {
-    try {
-        const history = await SensorDataService.fetchSensorHistory({
-            device_id: req.query.device_id,
-            limit: req.query.limit,
-        });
-        res.json(history);
-    }
-    catch (err) {
-        next(err);
-    }
-};
-exports.fetchHistory = fetchHistory;
+exports.emitSensorData = emitSensorData;

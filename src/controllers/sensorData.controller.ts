@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
+import { emitSensorData } from '../realtime/socket';
 import * as SensorDataService from '../services/sensorData.service';
 
 export const index = (_req: Request, res: Response) => {
@@ -16,6 +17,7 @@ export const index = (_req: Request, res: Response) => {
 export const create = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const reading = await SensorDataService.createSensorReading(req.body);
+    emitSensorData(typeof (reading as { toJSON?: () => unknown }).toJSON === 'function' ? (reading as { toJSON: () => unknown }).toJSON() : reading);
     res.status(201).json({ status: 'success', id: String(reading._id) });
   } catch (err) {
     next(err);
