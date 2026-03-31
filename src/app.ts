@@ -9,6 +9,7 @@ import appointmentRoutes from './routes/appointment.routes';
 import healthRoutes from './routes/healthRecord.routes';
 import diagnosticRoutes from './routes/diagnostic.routes';
 import adminRoutes from './routes/admin.routes';
+import aiRoutes from './routes/ai.routes';
 import { errorHandler } from './middlewares/error.middleware';
 import { swaggerSpec } from './docs/swagger';
 
@@ -24,6 +25,7 @@ export const createApp = () => {
   app.use('/api/health-records', healthRoutes);
   app.use('/api/diagnostics', diagnosticRoutes);
   app.use('/api/admin', adminRoutes);
+  app.use('/api/ai', aiRoutes);
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
@@ -32,4 +34,3 @@ export const createApp = () => {
   connectDB().catch((err) => console.error('DB connection failed', err));
   return app;
 };
-
