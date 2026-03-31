@@ -43,6 +43,8 @@ export interface Env {
   nodeEnv: string;
   jwtSecret: string;
   jwtExpiresIn: string | number;
+  nodeEnv: string;
+  allowSensorMemoryFallback: boolean;
   openaiApiKey?: string;
   allowSensorMemoryFallback: boolean;
 }
@@ -54,6 +56,8 @@ export const env: Env = {
   nodeEnv: normalizedNodeEnv,
   jwtSecret: process.env.JWT_SECRET || 'change_me',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
+  nodeEnv: normalizedNodeEnv,
+  allowSensorMemoryFallback: process.env.ALLOW_SENSOR_MEMORY_FALLBACK === 'true',
   openaiApiKey: process.env.OPENAI_API_KEY,
   allowSensorMemoryFallback,
 };

@@ -41,4 +41,6 @@ const sensorReadingSchema = new Schema<ISensorReading>(
   { timestamps: true },
 );
 
+sensorReadingSchema.index({ device_id: 1, timestamp: -1 });
+
 export const SensorReading = model<ISensorReading>('SensorReading', sensorReadingSchema);

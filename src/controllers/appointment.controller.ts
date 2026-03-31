@@ -25,9 +25,36 @@ export const list = async (req: AuthRequest, res: Response, next: NextFunction) 
   }
 };
 
+export const getOne = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const appointment = await AppointmentService.getAppointmentById(req.params.id);
+    res.json(appointment);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const update = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const appointment = await AppointmentService.updateAppointment(req.params.id, req.body);
+    res.json(appointment);
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const updateStatus = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const appointment = await AppointmentService.updateAppointmentStatus(req.params.id, req.body.status);
+    res.json(appointment);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const remove = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const appointment = await AppointmentService.deleteAppointment(req.params.id);
     res.json(appointment);
   } catch (err) {
     next(err);

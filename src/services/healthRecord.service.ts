@@ -8,6 +8,24 @@ export const submitVitals = async (payload: { userId: string; bloodPressure?: st
 
 export const fetchVitals = async (userId: string) => HealthRecord.find({ userId }).sort({ createdAt: -1 });
 
+export const getRecordById = async (id: string) => {
+  const record = await HealthRecord.findById(id);
+  if (!record) throw new ApiError(404, 'Health record not found');
+  return record;
+};
+
+export const updateRecord = async (id: string, payload: Partial<{ bloodPressure?: string; glucose?: number; temperature?: number }>) => {
+  const record = await HealthRecord.findByIdAndUpdate(id, payload, { new: true });
+  if (!record) throw new ApiError(404, 'Health record not found');
+  return record;
+};
+
+export const deleteRecord = async (id: string) => {
+  const record = await HealthRecord.findByIdAndDelete(id);
+  if (!record) throw new ApiError(404, 'Health record not found');
+  return record;
+};
+
 export const detectAlerts = (record: { bloodPressure?: string; glucose?: number; temperature?: number }) => {
   const alerts: string[] = [];
   if (record.bloodPressure) {

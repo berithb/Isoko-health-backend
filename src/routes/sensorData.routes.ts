@@ -36,9 +36,37 @@ const historyQuerySchema = z.object({
   params: z.object({}).optional(),
 });
 
+const idSchema = z.object({ params: z.object({ id: z.string() }) });
+
+const updateSensorDataSchema = z.object({
+  body: z.object({
+    device_id: z.string().min(1).optional(),
+    timestamp: isoDateSchema.optional(),
+    sensors: z
+      .object({
+        temperature: z.number().optional(),
+        humidity: z.number().optional(),
+        distance: z.number().optional(),
+        motion: z.number().optional(),
+      })
+      .optional(),
+    alerts: z
+      .object({
+        fall_detected: z.boolean().optional(),
+        fever_detected: z.boolean().optional(),
+        emergency: z.boolean().optional(),
+      })
+      .optional(),
+  }),
+  params: z.object({ id: z.string() }),
+});
+
 router.post('/', validate(createSensorDataSchema), SensorDataController.create);
 router.get('/', SensorDataController.index);
 router.get('/latest', SensorDataController.fetchLatest);
 router.get('/history', validate(historyQuerySchema), SensorDataController.fetchHistory);
+router.get('/:id', validate(idSchema), SensorDataController.getOne);
+router.put('/:id', validate(updateSensorDataSchema), SensorDataController.update);
+router.delete('/:id', validate(idSchema), SensorDataController.remove);
 
 export default router;
