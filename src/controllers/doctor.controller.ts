@@ -22,3 +22,21 @@ export const getOne = async (req: AuthRequest, res: Response, next: NextFunction
     next(err);
   }
 };
+
+export const create = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const doctor = await DoctorService.createDoctor(req.body.userId, req.body);
+    res.status(201).json(doctor);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const update = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const doctor = await DoctorService.updateDoctor(req.params.id, req.body);
+    res.json(doctor);
+  } catch (err) {
+    next(err);
+  }
+};

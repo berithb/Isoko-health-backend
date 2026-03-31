@@ -16,10 +16,12 @@ const options: swaggerJsdoc.Options = {
       { name: 'Diagnostics' },
       { name: 'Admin' },
       { name: 'AI' },
+      { name: 'Doctors' },
       { name: 'Chat' },
       { name: 'SensorData' },
       { name: 'Subscriptions' },
     ],
+
     servers: [{ url: 'http://localhost:4000', description: 'Local development' }],
     components: {
       securitySchemes: {
