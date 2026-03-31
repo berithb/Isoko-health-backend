@@ -20,6 +20,7 @@ const options = {
             { name: 'HealthRecords' },
             { name: 'Diagnostics' },
             { name: 'Admin' },
+            { name: 'SensorData' },
         ],
         components: {
             securitySchemes: {
@@ -43,6 +44,61 @@ const options = {
                         name: { type: 'string' },
                         email: { type: 'string' },
                         password: { type: 'string', minLength: 6 },
+                    },
+                },
+                SensorReading: {
+                    type: 'object',
+                    required: ['device_id', 'timestamp', 'sensors', 'alerts'],
+                    properties: {
+                        _id: { type: 'string', description: 'Mongo ObjectId' },
+                        device_id: { type: 'string', example: 'esp32-001' },
+                        timestamp: { type: 'string', format: 'date-time', example: '2026-03-30T22:15:00.000Z' },
+                        sensors: {
+                            type: 'object',
+                            properties: {
+                                temperature: { type: 'number', example: 36.5 },
+                                humidity: { type: 'number', example: 68 },
+                                distance: { type: 'number', example: 4.2 },
+                                motion: { type: 'number', example: 1 },
+                            },
+                        },
+                        alerts: {
+                            type: 'object',
+                            properties: {
+                                fall_detected: { type: 'boolean', example: false },
+                                fever_detected: { type: 'boolean', example: true },
+                                emergency: { type: 'boolean', example: false },
+                            },
+                        },
+                        createdAt: { type: 'string', format: 'date-time' },
+                        updatedAt: { type: 'string', format: 'date-time' },
+                    },
+                },
+                SensorReadingCreate: {
+                    type: 'object',
+                    required: ['device_id', 'timestamp', 'sensors', 'alerts'],
+                    properties: {
+                        device_id: { type: 'string', example: 'esp32-001' },
+                        timestamp: { type: 'string', example: '2026-03-30T22:15:00' },
+                        sensors: {
+                            type: 'object',
+                            required: ['temperature', 'humidity', 'distance', 'motion'],
+                            properties: {
+                                temperature: { type: 'number', example: 36.5 },
+                                humidity: { type: 'number', example: 68 },
+                                distance: { type: 'number', example: 4.2 },
+                                motion: { type: 'number', example: 1 },
+                            },
+                        },
+                        alerts: {
+                            type: 'object',
+                            required: ['fall_detected', 'fever_detected', 'emergency'],
+                            properties: {
+                                fall_detected: { type: 'boolean', example: false },
+                                fever_detected: { type: 'boolean', example: true },
+                                emergency: { type: 'boolean', example: false },
+                            },
+                        },
                     },
                 },
             },
@@ -113,7 +169,7 @@ const options = {
                 put: {
                     tags: ['Users'],
                     summary: 'Update my profile',
-                    description: 'Updates your own profile name. Role cannot be changed here. Requires Bearer token.',
+                    description: 'Updates your own profile name. Role cannot be changed here. Requires Bearer token. Use GET /api/users/me first to see your current values.',
                     requestBody: {
                         required: true,
                         content: {
@@ -124,13 +180,25 @@ const options = {
                                         name: { type: 'string', example: 'Jane Doe' }
                                     },
                                 },
+                                example: { name: 'Current Name' },
                             },
                         },
                     },
                     responses: {
                         200: {
                             description: 'Profile updated',
-                            content: { 'application/json': { schema: { $ref: '#/components/schemas/User' } } },
+                            content: {
+                                'application/json': {
+                                    schema: { $ref: '#/components/schemas/User' },
+                                    example: {
+                                        _id: '60f8c0a2b6e0a72f9c123456',
+                                        name: 'Updated Name',
+                                        email: 'user@example.com',
+                                        role: 'patient',
+                                        createdAt: '2024-01-01T12:00:00.000Z',
+                                    },
+                                },
+                            },
                         },
                         400: { description: 'Validation error' },
                         401: { description: 'Unauthorized' },
@@ -152,6 +220,130 @@ const options = {
             '/api/health-records': {
                 get: { tags: ['HealthRecords'], summary: 'Fetch vitals', responses: { 200: { description: 'List' } } },
                 post: { tags: ['HealthRecords'], summary: 'Submit vitals', responses: { 201: { description: 'Recorded' } } },
+            },
+            '/api/v1/data': {
+                get: {
+                    tags: ['SensorData'],
+                    summary: 'Show available sensor data endpoints',
+                    security: [],
+                    responses: {
+                        200: {
+                            description: 'Sensor API overview',
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        type: 'object',
+                                        properties: {
+                                            status: { type: 'string', example: 'ok' },
+                                            message: { type: 'string', example: 'Sensor data API is available.' },
+                                            endpoints: {
+                                                type: 'object',
+                                                properties: {
+                                                    post: { type: 'string', example: '/api/v1/data' },
+                                                    latest: { type: 'string', example: '/api/v1/data/latest' },
+                                                    history: { type: 'string', example: '/api/v1/data/history' },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                post: {
+                    tags: ['SensorData'],
+                    summary: 'Store a sensor reading from Wokwi or ESP32',
+                    security: [],
+                    requestBody: {
+                        required: true,
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/SensorReadingCreate' },
+                            },
+                        },
+                    },
+                    responses: {
+                        201: {
+                            description: 'Reading stored',
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        type: 'object',
+                                        properties: {
+                                            status: { type: 'string', example: 'success' },
+                                            id: { type: 'string', example: '6608ac2e85d2b684d0f7f0d1' },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        400: { description: 'Validation error' },
+                    },
+                },
+            },
+            '/api/v1/data/latest': {
+                get: {
+                    tags: ['SensorData'],
+                    summary: 'Fetch the latest stored sensor reading',
+                    security: [],
+                    responses: {
+                        200: {
+                            description: 'Latest reading or empty state',
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        oneOf: [
+                                            { $ref: '#/components/schemas/SensorReading' },
+                                            {
+                                                type: 'object',
+                                                properties: {
+                                                    status: { type: 'string', example: 'empty' },
+                                                },
+                                            },
+                                        ],
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            '/api/v1/data/history': {
+                get: {
+                    tags: ['SensorData'],
+                    summary: 'Fetch sensor history',
+                    security: [],
+                    parameters: [
+                        {
+                            name: 'device_id',
+                            in: 'query',
+                            required: false,
+                            schema: { type: 'string' },
+                            description: 'Filter history to a single device',
+                        },
+                        {
+                            name: 'limit',
+                            in: 'query',
+                            required: false,
+                            schema: { type: 'integer', minimum: 1, maximum: 500, default: 50 },
+                            description: 'Maximum number of records to return',
+                        },
+                    ],
+                    responses: {
+                        200: {
+                            description: 'Historical readings',
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        type: 'array',
+                                        items: { $ref: '#/components/schemas/SensorReading' },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
             },
             '/api/diagnostics': {
                 get: { tags: ['Diagnostics'], summary: 'Get diagnostic tests', responses: { 200: { description: 'List' } } },
