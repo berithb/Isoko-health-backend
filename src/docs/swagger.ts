@@ -15,7 +15,7 @@ const options: swaggerJsdoc.Options = {
       { name: 'HealthRecords' },
       { name: 'Diagnostics' },
       { name: 'Admin' },
-      { name: 'SensorData' },
+      { name: 'AI' },
     ],
     components: {
       securitySchemes: {
@@ -381,6 +381,59 @@ const options: swaggerJsdoc.Options = {
       },
       '/api/admin/analytics': {
         get: { tags: ['Admin'], summary: 'View analytics', responses: { 200: { description: 'Analytics' } } },
+      },
+      '/api/ai': {
+        post: {
+          tags: ['AI'],
+          summary: 'Run an AI helper (symptom checker, summaries, lab explainer, etc.)',
+          description:
+            'Sends the requested feature and payload to Anthropic Claude. Requires ANTHROPIC_API_KEY in backend env. No auth by default—secure accordingly.',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['feature'],
+                  properties: {
+                    feature: {
+                      type: 'string',
+                      enum: ['symptom_checker', 'history_summary', 'chronic_monitoring', 'lab_explainer', 'telemedicine_intake'],
+                    },
+                    payload: { type: 'object', description: 'Input specific to the feature.' },
+                  },
+                  example: {
+                    feature: 'symptom_checker',
+                    payload: { symptoms: 'fever 38.5C, dry cough, sore throat, fatigue' },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: 'AI response',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      feature: { type: 'string' },
+                      reply: { type: 'string' },
+                    },
+                  },
+                  example: {
+                    feature: 'symptom_checker',
+                    reply:
+                      'Urgency: routine. Likely viral upper respiratory infection. See a primary care doctor if symptoms worsen, last >7 days, or if breathing issues appear.',
+                  },
+                },
+              },
+            },
+            400: { description: 'Unsupported feature or bad payload' },
+            500: { description: 'Server/AI error' },
+          },
+        },
       },
     },
   },

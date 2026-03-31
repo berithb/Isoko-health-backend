@@ -40,8 +40,7 @@ export interface Env {
   host: string;
   jwtSecret: string;
   jwtExpiresIn: string | number;
-  nodeEnv: string;
-  allowSensorMemoryFallback: boolean;
+  anthropicApiKey?: string;
 }
 
 export const env: Env = {
@@ -49,8 +48,5 @@ export const env: Env = {
   host: process.env.HOST || '0.0.0.0',
   jwtSecret: process.env.JWT_SECRET || 'change_me',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
-  nodeEnv: normalizedNodeEnv,
-  allowSensorMemoryFallback:
-    process.env.ALLOW_SENSOR_MEMORY_FALLBACK === 'true' ||
-    (normalizedNodeEnv !== 'production' && process.env.ALLOW_SENSOR_MEMORY_FALLBACK !== 'false'),
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY,
 };

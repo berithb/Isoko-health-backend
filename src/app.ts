@@ -113,7 +113,7 @@ export const createApp = () => {
   app.use('/api/health-records', healthRoutes);
   app.use('/api/diagnostics', diagnosticRoutes);
   app.use('/api/admin', adminRoutes);
-  app.use('/api/v1/data', sensorDataRoutes);
+  app.use('/api/ai', aiRoutes);
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
@@ -122,4 +122,3 @@ export const createApp = () => {
   connectDB().catch((err) => console.error('DB connection failed', err));
   return app;
 };
-
