@@ -1,6 +1,18 @@
 import { NextFunction, Request, Response } from 'express';
 import * as SensorDataService from '../services/sensorData.service';
 
+export const index = (_req: Request, res: Response) => {
+  res.json({
+    status: 'ok',
+    message: 'Sensor data API is available.',
+    endpoints: {
+      post: '/api/v1/data',
+      latest: '/api/v1/data/latest',
+      history: '/api/v1/data/history',
+    },
+  });
+};
+
 export const create = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const reading = await SensorDataService.createSensorReading(req.body);

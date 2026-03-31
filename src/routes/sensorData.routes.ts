@@ -37,6 +37,7 @@ const historyQuerySchema = z.object({
 });
 
 router.post('/', validate(createSensorDataSchema), SensorDataController.create);
+router.get('/', SensorDataController.index);
 router.get('/latest', SensorDataController.fetchLatest);
 router.get('/history', validate(historyQuerySchema), SensorDataController.fetchHistory);
 

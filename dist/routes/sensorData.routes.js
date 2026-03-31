@@ -67,6 +67,7 @@ const historyQuerySchema = zod_1.z.object({
     params: zod_1.z.object({}).optional(),
 });
 router.post('/', (0, validation_middleware_1.validate)(createSensorDataSchema), SensorDataController.create);
+router.get('/', SensorDataController.index);
 router.get('/latest', SensorDataController.fetchLatest);
 router.get('/history', (0, validation_middleware_1.validate)(historyQuerySchema), SensorDataController.fetchHistory);
 exports.default = router;

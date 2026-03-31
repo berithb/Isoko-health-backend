@@ -33,8 +33,20 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchHistory = exports.fetchLatest = exports.create = void 0;
+exports.fetchHistory = exports.fetchLatest = exports.create = exports.index = void 0;
 const SensorDataService = __importStar(require("../services/sensorData.service"));
+const index = (_req, res) => {
+    res.json({
+        status: 'ok',
+        message: 'Sensor data API is available.',
+        endpoints: {
+            post: '/api/v1/data',
+            latest: '/api/v1/data/latest',
+            history: '/api/v1/data/history',
+        },
+    });
+};
+exports.index = index;
 const create = async (req, res, next) => {
     try {
         const reading = await SensorDataService.createSensorReading(req.body);

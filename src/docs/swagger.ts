@@ -217,6 +217,35 @@ const options: swaggerJsdoc.Options = {
         post: { tags: ['HealthRecords'], summary: 'Submit vitals', responses: { 201: { description: 'Recorded' } } },
       },
       '/api/v1/data': {
+        get: {
+          tags: ['SensorData'],
+          summary: 'Show available sensor data endpoints',
+          security: [],
+          responses: {
+            200: {
+              description: 'Sensor API overview',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      status: { type: 'string', example: 'ok' },
+                      message: { type: 'string', example: 'Sensor data API is available.' },
+                      endpoints: {
+                        type: 'object',
+                        properties: {
+                          post: { type: 'string', example: '/api/v1/data' },
+                          latest: { type: 'string', example: '/api/v1/data/latest' },
+                          history: { type: 'string', example: '/api/v1/data/history' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
         post: {
           tags: ['SensorData'],
           summary: 'Store a sensor reading from Wokwi or ESP32',
