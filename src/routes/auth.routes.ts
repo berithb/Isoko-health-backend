@@ -37,5 +37,6 @@ router.post('/register', validate(registerSchema), AuthController.register);
 router.post('/login', validate(loginSchema), AuthController.login);
 router.post('/forgot-password', validate(forgotSchema), AuthController.forgotPassword);
 router.post('/reset-password', validate(resetSchema), AuthController.resetPassword);
+router.get('/roles', AuthController.listRoles);
 
 export default router;

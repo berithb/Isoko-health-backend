@@ -14,14 +14,33 @@ import aiRoutes from './routes/ai.routes';
 import chatRoutes from './routes/chat.routes';
 import sensorDataRoutes from './routes/sensorData.routes';
 import subscriptionRoutes from './routes/subscription.routes';
+import dashboardRoutes from './routes/dashboard.routes';
+import doctorRoutes from './routes/doctor.routes';
+import planRoutes from './routes/plan.routes';
 import { errorHandler } from './middlewares/error.middleware';
 import { swaggerSpec } from './docs/swagger';
 
 export const createApp = () => {
   const app = express();
-  const allowedOrigins = env.corsOrigin === '*' ? true : env.corsOrigin.split(',').map((origin) => origin.trim());
+  // Allow a stable list of frontend hosts plus any provided via ENV.
+  const defaultOrigins = ['http://localhost:8081', 'http://localhost:3000'];
+  const envOrigins =
+    env.corsOrigin === '*'
+      ? ['*']
+      : env.corsOrigin
+          .split(',')
+          .map((origin) => origin.trim())
+          .filter(Boolean);
+  const mergedOrigins = envOrigins.includes('*')
+    ? '*'
+    : Array.from(new Set([...defaultOrigins, ...envOrigins]));
 
-  app.use(cors({ origin: allowedOrigins }));
+  app.use(
+    cors({
+      origin: mergedOrigins,
+      credentials: true,
+    }),
+  );
   app.use(express.json());
   app.use(
     helmet({
@@ -128,6 +147,9 @@ export const createApp = () => {
   app.use('/api/chat', chatRoutes);
   app.use('/api/v1/data', sensorDataRoutes);
   app.use('/api/subscriptions', subscriptionRoutes);
+  app.use('/api/dashboard', dashboardRoutes);
+  app.use('/api/doctors', doctorRoutes);
+  app.use('/api/plans', planRoutes);
 
   app.get('/api-docs.json', (_req, res) => {
     res.json(swaggerSpec);

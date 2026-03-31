@@ -36,3 +36,7 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
     next(err);
   }
 };
+
+export const listRoles = (_req: Request, res: Response) => {
+  res.json({ roles: ['patient', 'doctor', 'admin', 'caregiver'] });
+};
