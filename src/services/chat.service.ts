@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import type { EasyInputMessage } from 'openai/resources/responses/responses';
 import { env } from '../config';
 import { ApiError } from '../utils/apiError';
 
@@ -12,9 +13,12 @@ const getClient = () => {
 export const sendChat = async (messages: ChatMessage[], system?: string, previewOnly = false) => {
   if (!messages?.length) throw new ApiError(400, 'messages array is required');
 
-  const input = [
-    ...(system ? [{ role: 'system', content: system }] : []),
-    ...messages.map((m) => ({ role: m.role, content: m.content })),
+  const input: EasyInputMessage[] = [
+    ...(system ? [{ role: 'system', content: system } satisfies EasyInputMessage] : []),
+    ...messages.map((message) => ({
+      role: message.role,
+      content: message.content,
+    })),
   ];
 
   if (previewOnly) {
@@ -28,7 +32,7 @@ export const sendChat = async (messages: ChatMessage[], system?: string, preview
     input,
   });
 
-  const reply = response.output?.[0]?.content?.[0]?.text;
+  const reply = response.output_text?.trim();
   if (!reply) throw new ApiError(502, 'Empty response from OpenAI');
 
   return { system, messages, reply };

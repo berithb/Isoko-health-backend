@@ -17,7 +17,9 @@ const options: swaggerJsdoc.Options = {
       { name: 'Admin' },
       { name: 'AI' },
       { name: 'Chat' },
+      { name: 'SensorData' },
     ],
+    servers: [{ url: 'http://localhost:4000', description: 'Local development' }],
     components: {
       securitySchemes: {
         bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },

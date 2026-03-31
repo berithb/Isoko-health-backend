@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createApp = void 0;
+const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
 const helmet_1 = __importDefault(require("helmet"));
 const morgan_1 = __importDefault(require("morgan"));
@@ -15,11 +16,15 @@ const appointment_routes_1 = __importDefault(require("./routes/appointment.route
 const healthRecord_routes_1 = __importDefault(require("./routes/healthRecord.routes"));
 const diagnostic_routes_1 = __importDefault(require("./routes/diagnostic.routes"));
 const admin_routes_1 = __importDefault(require("./routes/admin.routes"));
+const ai_routes_1 = __importDefault(require("./routes/ai.routes"));
+const chat_routes_1 = __importDefault(require("./routes/chat.routes"));
 const sensorData_routes_1 = __importDefault(require("./routes/sensorData.routes"));
 const error_middleware_1 = require("./middlewares/error.middleware");
 const swagger_1 = require("./docs/swagger");
 const createApp = () => {
     const app = (0, express_1.default)();
+    const allowedOrigins = config_1.env.corsOrigin === '*' ? true : config_1.env.corsOrigin.split(',').map((origin) => origin.trim());
+    app.use((0, cors_1.default)({ origin: allowedOrigins }));
     app.use(express_1.default.json());
     app.use((0, helmet_1.default)({
         contentSecurityPolicy: {
@@ -104,6 +109,10 @@ const createApp = () => {
                 history: '/api/v1/data/history',
                 memoryFallbackEnabled: config_1.env.allowSensorMemoryFallback,
             },
+            websocket: {
+                namespace: '/',
+                events: ['initial-data', 'new-data'],
+            },
         });
     });
     app.use('/api/auth', auth_routes_1.default);
@@ -112,8 +121,20 @@ const createApp = () => {
     app.use('/api/health-records', healthRecord_routes_1.default);
     app.use('/api/diagnostics', diagnostic_routes_1.default);
     app.use('/api/admin', admin_routes_1.default);
+    app.use('/api/ai', ai_routes_1.default);
+    app.use('/api/chat', chat_routes_1.default);
     app.use('/api/v1/data', sensorData_routes_1.default);
-    app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_1.swaggerSpec));
+    app.get('/api-docs.json', (_req, res) => {
+        res.json(swagger_1.swaggerSpec);
+    });
+    app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_1.swaggerSpec, {
+        explorer: true,
+        swaggerOptions: {
+            docExpansion: 'list',
+            operationsSorter: 'alpha',
+            tagsSorter: 'alpha',
+        },
+    }));
     app.use(error_middleware_1.errorHandler);
     (0, config_1.connectDB)().catch((err) => console.error('DB connection failed', err));
     return app;

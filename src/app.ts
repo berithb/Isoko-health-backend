@@ -1,7 +1,7 @@
+import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import { connectDB, env, getDbStatus } from './config';
 import authRoutes from './routes/auth.routes';
@@ -18,9 +18,22 @@ import { swaggerSpec } from './docs/swagger';
 
 export const createApp = () => {
   const app = express();
+  const allowedOrigins = env.corsOrigin === '*' ? true : env.corsOrigin.split(',').map((origin) => origin.trim());
+
+  app.use(cors({ origin: allowedOrigins }));
   app.use(express.json());
-  app.use(cors());
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        useDefaults: true,
+        directives: {
+          'upgrade-insecure-requests': null,
+        },
+      },
+      crossOriginOpenerPolicy: false,
+      originAgentCluster: false,
+    }),
+  );
   app.use(morgan('dev'));
 
   app.get('/', (_req, res) => {
@@ -97,6 +110,10 @@ export const createApp = () => {
         history: '/api/v1/data/history',
         memoryFallbackEnabled: env.allowSensorMemoryFallback,
       },
+      websocket: {
+        namespace: '/',
+        events: ['initial-data', 'new-data'],
+      },
     });
   });
 
@@ -108,8 +125,24 @@ export const createApp = () => {
   app.use('/api/admin', adminRoutes);
   app.use('/api/ai', aiRoutes);
   app.use('/api/chat', chatRoutes);
+  app.use('/api/v1/data', sensorDataRoutes);
 
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.get('/api-docs.json', (_req, res) => {
+    res.json(swaggerSpec);
+  });
+
+  app.use(
+    '/api-docs',
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec, {
+      explorer: true,
+      swaggerOptions: {
+        docExpansion: 'list',
+        operationsSorter: 'alpha',
+        tagsSorter: 'alpha',
+      },
+    }),
+  );
 
   app.use(errorHandler);
 
