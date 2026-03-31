@@ -91,14 +91,18 @@ const createApp = () => {
     `);
     });
     app.get('/health', (_req, res) => {
+        const dbStatus = (0, config_1.getDbStatus)();
         res.json({
-            status: 'ok',
+            status: dbStatus.connected ? 'ok' : 'degraded',
             service: 'IsokoHealth API',
             docs: '/api-docs',
+            environment: config_1.env.nodeEnv,
+            database: dbStatus,
             sensorData: {
                 post: '/api/v1/data',
                 latest: '/api/v1/data/latest',
                 history: '/api/v1/data/history',
+                memoryFallbackEnabled: config_1.env.allowSensorMemoryFallback,
             },
         });
     });

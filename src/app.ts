@@ -2,7 +2,7 @@ import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import swaggerUi from 'swagger-ui-express';
-import { connectDB } from './config';
+import { connectDB, env, getDbStatus } from './config';
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import appointmentRoutes from './routes/appointment.routes';
@@ -90,14 +90,19 @@ export const createApp = () => {
   });
 
   app.get('/health', (_req, res) => {
+    const dbStatus = getDbStatus();
+
     res.json({
-      status: 'ok',
+      status: dbStatus.connected ? 'ok' : 'degraded',
       service: 'IsokoHealth API',
       docs: '/api-docs',
+      environment: env.nodeEnv,
+      database: dbStatus,
       sensorData: {
         post: '/api/v1/data',
         latest: '/api/v1/data/latest',
         history: '/api/v1/data/history',
+        memoryFallbackEnabled: env.allowSensorMemoryFallback,
       },
     });
   });

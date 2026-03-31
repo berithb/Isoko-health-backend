@@ -7,6 +7,8 @@ exports.fetchSensorHistory = exports.fetchLatestSensorReading = exports.createSe
 const crypto_1 = require("crypto");
 const mongoose_1 = __importDefault(require("mongoose"));
 const SensorReading_1 = require("../models/SensorReading");
+const config_1 = require("../config");
+const apiError_1 = require("../utils/apiError");
 const memoryReadings = [];
 const isDatabaseReady = () => mongoose_1.default.connection.readyState === 1;
 const buildMemoryReading = (payload) => {
@@ -21,6 +23,9 @@ const buildMemoryReading = (payload) => {
 };
 const createSensorReading = async (payload) => {
     if (!isDatabaseReady()) {
+        if (!config_1.env.allowSensorMemoryFallback) {
+            throw new apiError_1.ApiError(503, 'Sensor data storage is unavailable because MongoDB is not connected.');
+        }
         const reading = buildMemoryReading(payload);
         memoryReadings.push(reading);
         return reading;
@@ -34,6 +39,9 @@ const createSensorReading = async (payload) => {
 exports.createSensorReading = createSensorReading;
 const fetchLatestSensorReading = async () => {
     if (!isDatabaseReady()) {
+        if (!config_1.env.allowSensorMemoryFallback) {
+            throw new apiError_1.ApiError(503, 'Sensor data is unavailable because MongoDB is not connected.');
+        }
         return memoryReadings.at(-1) ?? null;
     }
     return SensorReading_1.SensorReading.findOne().sort({ timestamp: -1, createdAt: -1 }).lean();
@@ -41,6 +49,9 @@ const fetchLatestSensorReading = async () => {
 exports.fetchLatestSensorReading = fetchLatestSensorReading;
 const fetchSensorHistory = async ({ device_id, limit = 50 }) => {
     if (!isDatabaseReady()) {
+        if (!config_1.env.allowSensorMemoryFallback) {
+            throw new apiError_1.ApiError(503, 'Sensor history is unavailable because MongoDB is not connected.');
+        }
         const filtered = device_id ? memoryReadings.filter((reading) => reading.device_id === device_id) : memoryReadings;
         return filtered.slice(-limit).reverse();
     }

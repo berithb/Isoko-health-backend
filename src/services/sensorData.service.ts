@@ -1,6 +1,8 @@
 import { randomUUID } from 'crypto';
 import mongoose from 'mongoose';
 import { SensorReading } from '../models/SensorReading';
+import { env } from '../config';
+import { ApiError } from '../utils/apiError';
 
 export interface SensorPayload {
   device_id: string;
@@ -48,6 +50,10 @@ const buildMemoryReading = (payload: SensorPayload): StoredSensorReading => {
 
 export const createSensorReading = async (payload: SensorPayload) => {
   if (!isDatabaseReady()) {
+    if (!env.allowSensorMemoryFallback) {
+      throw new ApiError(503, 'Sensor data storage is unavailable because MongoDB is not connected.');
+    }
+
     const reading = buildMemoryReading(payload);
     memoryReadings.push(reading);
     return reading;
@@ -63,6 +69,10 @@ export const createSensorReading = async (payload: SensorPayload) => {
 
 export const fetchLatestSensorReading = async () => {
   if (!isDatabaseReady()) {
+    if (!env.allowSensorMemoryFallback) {
+      throw new ApiError(503, 'Sensor data is unavailable because MongoDB is not connected.');
+    }
+
     return memoryReadings.at(-1) ?? null;
   }
 
@@ -71,6 +81,10 @@ export const fetchLatestSensorReading = async () => {
 
 export const fetchSensorHistory = async ({ device_id, limit = 50 }: HistoryOptions) => {
   if (!isDatabaseReady()) {
+    if (!env.allowSensorMemoryFallback) {
+      throw new ApiError(503, 'Sensor history is unavailable because MongoDB is not connected.');
+    }
+
     const filtered = device_id ? memoryReadings.filter((reading) => reading.device_id === device_id) : memoryReadings;
     return filtered.slice(-limit).reverse();
   }
