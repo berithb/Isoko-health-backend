@@ -13,12 +13,14 @@ export const connectDB = async () => {
 
 export interface Env {
   port: number;
+  host: string;
   jwtSecret: string;
   jwtExpiresIn: string | number;
 }
 
 export const env: Env = {
   port: Number(process.env.PORT) || 4000,
+  host: process.env.HOST || '0.0.0.0',
   jwtSecret: process.env.JWT_SECRET || 'change_me',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
 };
