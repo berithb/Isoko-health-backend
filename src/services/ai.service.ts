@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+﻿import OpenAI from 'openai';
 import { env } from '../config';
 import { ApiError } from '../utils/apiError';
 
@@ -14,7 +14,7 @@ type PromptConfig = { system: string; buildUserMessage: (payload: any) => string
 const promptMap: Record<AiFeature, PromptConfig> = {
   symptom_checker: {
     system:
-      'You are a medical triage assistant. Based on symptoms, suggest urgency level (emergency/soon/routine) and relevant specialist. Never diagnose � always recommend seeing a doctor.',
+      'You are a medical triage assistant. Based on symptoms, suggest urgency level (emergency/soon/routine) and relevant specialist. Never diagnose — always recommend seeing a doctor.',
     buildUserMessage: (payload) => `Patient symptoms: ${payload?.symptoms ?? ''}`,
   },
   history_summary: {
@@ -39,39 +39,31 @@ const promptMap: Record<AiFeature, PromptConfig> = {
   },
 };
 
-const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
-const ANTHROPIC_VERSION = '2023-06-01';
+const getClient = () => {
+  if (!env.openaiApiKey) throw new ApiError(500, 'OPENAI_API_KEY is missing');
+  return new OpenAI({ apiKey: env.openaiApiKey });
+};
 
-export const runFeature = async (feature: AiFeature, payload: any) => {
+export const runFeature = async (feature: AiFeature, payload: any, previewOnly = false) => {
   const config = promptMap[feature];
   if (!config) throw new ApiError(400, 'Unsupported AI feature');
-  if (!env.anthropicApiKey) throw new ApiError(500, 'Anthropic API key is missing');
 
-  const body = {
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 1000,
-    system: config.system,
-    messages: [{ role: 'user', content: config.buildUserMessage(payload) }],
-  };
+  const userMessage = config.buildUserMessage(payload);
+  const base = { feature, system: config.system, userMessage };
+  if (previewOnly) return { ...base, reply: undefined };
 
-  const response = await fetch(ANTHROPIC_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': env.anthropicApiKey,
-      'anthropic-version': ANTHROPIC_VERSION,
-    },
-    body: JSON.stringify(body),
+  const client = getClient();
+
+  const response = await client.responses.create({
+    model: 'gpt-4.1-mini',
+    input: [
+      { role: 'system', content: config.system },
+      { role: 'user', content: userMessage },
+    ],
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new ApiError(response.status, `Anthropic request failed: ${errorText}`);
-  }
+  const text = response.output?.[0]?.content?.[0]?.text;
+  if (!text) throw new ApiError(502, 'Empty response from OpenAI');
 
-  const data = (await response.json()) as { content?: Array<{ text?: string }> };
-  const reply = data.content?.[0]?.text;
-  if (!reply) throw new ApiError(502, 'Empty response from AI');
-
-  return { feature, reply };
+  return { ...base, reply: text };
 };

@@ -1,6 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import { connectDB } from './config';
 import authRoutes from './routes/auth.routes';
@@ -10,12 +11,14 @@ import healthRoutes from './routes/healthRecord.routes';
 import diagnosticRoutes from './routes/diagnostic.routes';
 import adminRoutes from './routes/admin.routes';
 import aiRoutes from './routes/ai.routes';
+import chatRoutes from './routes/chat.routes';
 import { errorHandler } from './middlewares/error.middleware';
 import { swaggerSpec } from './docs/swagger';
 
 export const createApp = () => {
   const app = express();
   app.use(express.json());
+  app.use(cors());
   app.use(helmet());
   app.use(morgan('dev'));
 
@@ -26,6 +29,7 @@ export const createApp = () => {
   app.use('/api/diagnostics', diagnosticRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api/ai', aiRoutes);
+  app.use('/api/chat', chatRoutes);
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

@@ -15,12 +15,12 @@ export interface Env {
   port: number;
   jwtSecret: string;
   jwtExpiresIn: string | number;
-  anthropicApiKey?: string;
+  openaiApiKey?: string;
 }
 
 export const env: Env = {
   port: Number(process.env.PORT) || 4000,
   jwtSecret: process.env.JWT_SECRET || 'change_me',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
-  anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+  openaiApiKey: process.env.OPENAI_API_KEY,
 };
