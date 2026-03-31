@@ -16,6 +16,7 @@ const options: swaggerJsdoc.Options = {
       { name: 'Diagnostics' },
       { name: 'Admin' },
       { name: 'AI' },
+      { name: 'Chat' },
     ],
     components: {
       securitySchemes: {
@@ -387,7 +388,7 @@ const options: swaggerJsdoc.Options = {
           tags: ['AI'],
           summary: 'Run an AI helper (symptom checker, summaries, lab explainer, etc.)',
           description:
-            'Sends the requested feature and payload to Anthropic Claude. Requires ANTHROPIC_API_KEY in backend env. No auth by default—secure accordingly.',
+            'Sends the requested feature and payload to OpenAI. Requires OPENAI_API_KEY in backend env. No auth by default—secure accordingly.',
           requestBody: {
             required: true,
             content: {
@@ -401,10 +402,12 @@ const options: swaggerJsdoc.Options = {
                       enum: ['symptom_checker', 'history_summary', 'chronic_monitoring', 'lab_explainer', 'telemedicine_intake'],
                     },
                     payload: { type: 'object', description: 'Input specific to the feature.' },
+                    previewOnly: { type: 'boolean', description: 'If true, return system + userMessage without calling Claude.' },
                   },
                   example: {
                     feature: 'symptom_checker',
                     payload: { symptoms: 'fever 38.5C, dry cough, sore throat, fatigue' },
+                    previewOnly: false,
                   },
                 },
               },
@@ -419,11 +422,16 @@ const options: swaggerJsdoc.Options = {
                     type: 'object',
                     properties: {
                       feature: { type: 'string' },
+                      system: { type: 'string' },
+                      userMessage: { type: 'string' },
                       reply: { type: 'string' },
                     },
                   },
                   example: {
                     feature: 'symptom_checker',
+                    system:
+                      'You are a medical triage assistant. Based on symptoms, suggest urgency level (emergency/soon/routine) and relevant specialist. Never diagnose — always recommend seeing a doctor.',
+                    userMessage: 'Patient symptoms: fever 38.5C, dry cough, sore throat, fatigue',
                     reply:
                       'Urgency: routine. Likely viral upper respiratory infection. See a primary care doctor if symptoms worsen, last >7 days, or if breathing issues appear.',
                   },
@@ -431,6 +439,70 @@ const options: swaggerJsdoc.Options = {
               },
             },
             400: { description: 'Unsupported feature or bad payload' },
+            500: { description: 'Server/AI error' },
+          },
+        },
+      },
+      '/api/chat': {
+        post: {
+          tags: ['Chat'],
+          summary: 'General chat with OpenAI (multi-turn payload)',
+          description: 'Send an array of messages; optionally include a system prompt. Requires OPENAI_API_KEY.',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['messages'],
+                  properties: {
+                    system: { type: 'string', description: 'Optional system prompt to steer style/role.' },
+                    messages: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        required: ['role', 'content'],
+                        properties: {
+                          role: { type: 'string', enum: ['user', 'assistant'] },
+                          content: { type: 'string' },
+                        },
+                      },
+                    },
+                    previewOnly: { type: 'boolean', description: 'If true, returns prompt but skips model call.' },
+                  },
+                  example: {
+                    system: 'You are a friendly concierge.',
+                    messages: [
+                      { role: 'user', content: 'Book me a table for two at 7pm near downtown.' },
+                    ],
+                    previewOnly: false,
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: 'Chat response',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      system: { type: 'string', nullable: true },
+                      messages: { type: 'array' },
+                      reply: { type: 'string', nullable: true },
+                    },
+                  },
+                  example: {
+                    system: 'You are a friendly concierge.',
+                    messages: [{ role: 'user', content: 'Book me a table for two at 7pm near downtown.' }],
+                    reply: 'Sure—any cuisine preference and budget?',
+                  },
+                },
+              },
+            },
+            400: { description: 'Validation error' },
             500: { description: 'Server/AI error' },
           },
         },

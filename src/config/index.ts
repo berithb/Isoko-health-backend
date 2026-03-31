@@ -40,7 +40,7 @@ export interface Env {
   host: string;
   jwtSecret: string;
   jwtExpiresIn: string | number;
-  anthropicApiKey?: string;
+  openaiApiKey?: string;
 }
 
 export const env: Env = {
@@ -48,5 +48,5 @@ export const env: Env = {
   host: process.env.HOST || '0.0.0.0',
   jwtSecret: process.env.JWT_SECRET || 'change_me',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
-  anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+  openaiApiKey: process.env.OPENAI_API_KEY,
 };
