@@ -29,3 +29,39 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
   }
 };
 
+export const getOne = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const test = await DiagnosticService.getTestById(req.params.id);
+    res.json(test);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const list = async (_req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const tests = await DiagnosticService.getTests({});
+    res.json(tests);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const update = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const test = await DiagnosticService.updateTest(req.params.id, req.body);
+    res.json(test);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const remove = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const test = await DiagnosticService.deleteTest(req.params.id);
+    res.json(test);
+  } catch (err) {
+    next(err);
+  }
+};
+

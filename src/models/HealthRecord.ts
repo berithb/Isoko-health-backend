@@ -18,5 +18,7 @@ const healthRecordSchema = new Schema<IHealthRecord>(
   { timestamps: { createdAt: true, updatedAt: false } },
 );
 
+healthRecordSchema.index({ userId: 1, createdAt: -1 });
+
 export const HealthRecord = model<IHealthRecord>('HealthRecord', healthRecordSchema);
 

@@ -14,8 +14,13 @@ const vitalsSchema = z.object({
   }),
 });
 
+const idSchema = z.object({ params: z.object({ id: z.string() }) });
+
 router.post('/', authenticate, validate(vitalsSchema), HealthController.submit);
 router.get('/', authenticate, HealthController.fetch);
+router.get('/:id', authenticate, validate(idSchema), HealthController.getOne);
+router.put('/:id', authenticate, validate(vitalsSchema.merge(idSchema)), HealthController.update);
+router.delete('/:id', authenticate, validate(idSchema), HealthController.remove);
 
 export default router;
 

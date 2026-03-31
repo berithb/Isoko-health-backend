@@ -19,5 +19,7 @@ const diagnosticSchema = new Schema<IDiagnosticTest>(
   { timestamps: true },
 );
 
+diagnosticSchema.index({ userId: 1, status: 1, createdAt: -1 });
+
 export const DiagnosticTest = model<IDiagnosticTest>('DiagnosticTest', diagnosticSchema);
 

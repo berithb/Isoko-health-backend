@@ -48,3 +48,30 @@ export const fetchHistory = async (req: Request, res: Response, next: NextFuncti
     next(err);
   }
 };
+
+export const getOne = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const reading = await SensorDataService.getSensorReadingById(req.params.id);
+    res.json(reading);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const update = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const reading = await SensorDataService.updateSensorReading(req.params.id, req.body);
+    res.json(reading);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const remove = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const reading = await SensorDataService.deleteSensorReading(req.params.id);
+    res.json(reading);
+  } catch (err) {
+    next(err);
+  }
+};

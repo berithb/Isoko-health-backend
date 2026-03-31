@@ -17,6 +17,8 @@ const options: swaggerJsdoc.Options = {
       { name: 'Admin' },
       { name: 'AI' },
       { name: 'Chat' },
+      { name: 'SensorData' },
+      { name: 'Subscriptions' },
     ],
     components: {
       securitySchemes: {
@@ -40,6 +42,67 @@ const options: swaggerJsdoc.Options = {
             name: { type: 'string' },
             email: { type: 'string' },
             password: { type: 'string', minLength: 6 },
+          },
+        },
+        Appointment: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            patientId: { type: 'string' },
+            doctorId: { type: 'string' },
+            date: { type: 'string', format: 'date-time' },
+            status: { type: 'string', enum: ['pending', 'completed', 'cancelled'] },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        AppointmentCreate: {
+          type: 'object',
+          required: ['doctorId', 'date'],
+          properties: {
+            doctorId: { type: 'string' },
+            date: { type: 'string', format: 'date-time', example: '2026-03-31T10:00:00Z' },
+            status: { type: 'string', enum: ['pending', 'completed', 'cancelled'] },
+          },
+        },
+        DiagnosticTest: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            userId: { type: 'string' },
+            type: { type: 'string' },
+            result: { type: 'string', nullable: true },
+            status: { type: 'string', enum: ['requested', 'in-progress', 'completed'] },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        DiagnosticTestCreate: {
+          type: 'object',
+          required: ['type'],
+          properties: {
+            type: { type: 'string', example: 'Blood Panel' },
+            result: { type: 'string', nullable: true },
+            status: { type: 'string', enum: ['requested', 'in-progress', 'completed'], default: 'requested' },
+          },
+        },
+        HealthRecord: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            userId: { type: 'string' },
+            bloodPressure: { type: 'string', example: '120/80' },
+            glucose: { type: 'number', example: 110 },
+            temperature: { type: 'number', example: 36.8 },
+            createdAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        HealthRecordCreate: {
+          type: 'object',
+          properties: {
+            bloodPressure: { type: 'string', example: '120/80' },
+            glucose: { type: 'number', example: 110 },
+            temperature: { type: 'number', example: 36.8 },
           },
         },
         SensorReading: {
@@ -95,6 +158,26 @@ const options: swaggerJsdoc.Options = {
                 emergency: { type: 'boolean', example: false },
               },
             },
+          },
+        },
+        Subscription: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            userId: { type: 'string' },
+            plan: { type: 'string' },
+            status: { type: 'string', enum: ['active', 'inactive', 'cancelled'] },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        SubscriptionCreate: {
+          type: 'object',
+          required: ['userId', 'plan'],
+          properties: {
+            userId: { type: 'string' },
+            plan: { type: 'string' },
+            status: { type: 'string', enum: ['active', 'inactive', 'cancelled'], default: 'active' },
           },
         },
       },
@@ -202,20 +285,148 @@ const options: swaggerJsdoc.Options = {
         },
       },
       '/api/appointments': {
-        get: { tags: ['Appointments'], summary: 'List appointments', responses: { 200: { description: 'List' } } },
-        post: { tags: ['Appointments'], summary: 'Book appointment', responses: { 201: { description: 'Created' } } },
+        get: {
+          tags: ['Appointments'],
+          summary: 'List appointments',
+          responses: {
+            200: {
+              description: 'List',
+              content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Appointment' } } } },
+            },
+          },
+        },
+        post: {
+          tags: ['Appointments'],
+          summary: 'Book appointment',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/AppointmentCreate' },
+              },
+            },
+          },
+          responses: { 201: { description: 'Created', content: { 'application/json': { schema: { $ref: '#/components/schemas/Appointment' } } } } },
+        },
+      },
+      '/api/appointments/{id}': {
+        get: {
+          tags: ['Appointments'],
+          summary: 'Get appointment by id',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: {
+            200: { description: 'Appointment', content: { 'application/json': { schema: { $ref: '#/components/schemas/Appointment' } } } },
+            404: { description: 'Not found' },
+          },
+        },
+        put: {
+          tags: ['Appointments'],
+          summary: 'Update appointment',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    doctorId: { type: 'string' },
+                    date: { type: 'string', format: 'date-time' },
+                    status: { type: 'string', enum: ['pending', 'completed', 'cancelled'] },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            200: { description: 'Updated', content: { 'application/json': { schema: { $ref: '#/components/schemas/Appointment' } } } },
+            404: { description: 'Not found' },
+          },
+        },
+        delete: {
+          tags: ['Appointments'],
+          summary: 'Delete appointment',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { 200: { description: 'Deleted' }, 404: { description: 'Not found' } },
+        },
       },
       '/api/appointments/{id}/status': {
         patch: {
           tags: ['Appointments'],
           summary: 'Update appointment status',
           parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
-          responses: { 200: { description: 'Updated' } },
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { type: 'object', required: ['status'], properties: { status: { type: 'string', enum: ['pending', 'completed', 'cancelled'] } } },
+              },
+            },
+          },
+          responses: {
+            200: { description: 'Updated', content: { 'application/json': { schema: { $ref: '#/components/schemas/Appointment' } } } },
+            404: { description: 'Not found' },
+          },
         },
       },
       '/api/health-records': {
-        get: { tags: ['HealthRecords'], summary: 'Fetch vitals', responses: { 200: { description: 'List' } } },
-        post: { tags: ['HealthRecords'], summary: 'Submit vitals', responses: { 201: { description: 'Recorded' } } },
+        get: {
+          tags: ['HealthRecords'],
+          summary: 'Fetch vitals',
+          responses: {
+            200: {
+              description: 'List',
+              content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/HealthRecord' } } } },
+            },
+          },
+        },
+        post: {
+          tags: ['HealthRecords'],
+          summary: 'Submit vitals',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/HealthRecordCreate' },
+              },
+            },
+          },
+          responses: { 201: { description: 'Recorded', content: { 'application/json': { schema: { $ref: '#/components/schemas/HealthRecord' } } } } },
+        },
+      },
+      '/api/health-records/{id}': {
+        get: {
+          tags: ['HealthRecords'],
+          summary: 'Get health record by id',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: {
+            200: { description: 'Record', content: { 'application/json': { schema: { $ref: '#/components/schemas/HealthRecord' } } } },
+            404: { description: 'Not found' },
+          },
+        },
+        put: {
+          tags: ['HealthRecords'],
+          summary: 'Update health record',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/HealthRecordCreate' },
+              },
+            },
+          },
+          responses: {
+            200: { description: 'Updated', content: { 'application/json': { schema: { $ref: '#/components/schemas/HealthRecord' } } } },
+            404: { description: 'Not found' },
+          },
+        },
+        delete: {
+          tags: ['HealthRecords'],
+          summary: 'Delete health record',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { 200: { description: 'Deleted' }, 404: { description: 'Not found' } },
+        },
       },
       '/api/v1/data': {
         get: {
@@ -341,16 +552,131 @@ const options: swaggerJsdoc.Options = {
           },
         },
       },
+      '/api/v1/data/{id}': {
+        get: {
+          tags: ['SensorData'],
+          summary: 'Get sensor reading by id',
+          security: [],
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { 200: { description: 'Reading' }, 404: { description: 'Not found' } },
+        },
+        put: {
+          tags: ['SensorData'],
+          summary: 'Update sensor reading (testing/admin)',
+          security: [],
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    device_id: { type: 'string' },
+                    timestamp: { type: 'string', format: 'date-time' },
+                    sensors: { $ref: '#/components/schemas/SensorReadingCreate/properties/sensors' },
+                    alerts: { $ref: '#/components/schemas/SensorReadingCreate/properties/alerts' },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Updated' }, 404: { description: 'Not found' } },
+        },
+        delete: {
+          tags: ['SensorData'],
+          summary: 'Delete sensor reading (testing/admin)',
+          security: [],
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { 200: { description: 'Deleted' }, 404: { description: 'Not found' } },
+        },
+      },
       '/api/diagnostics': {
-        get: { tags: ['Diagnostics'], summary: 'Get diagnostic tests', responses: { 200: { description: 'List' } } },
-        post: { tags: ['Diagnostics'], summary: 'Request diagnostic test', responses: { 201: { description: 'Requested' } } },
+        get: {
+          tags: ['Diagnostics'],
+          summary: 'Get diagnostic tests',
+          responses: {
+            200: {
+              description: 'List',
+              content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/DiagnosticTest' } } } },
+            },
+          },
+        },
+        post: {
+          tags: ['Diagnostics'],
+          summary: 'Request diagnostic test',
+          requestBody: {
+            required: true,
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/DiagnosticTestCreate' } } },
+          },
+          responses: { 201: { description: 'Requested', content: { 'application/json': { schema: { $ref: '#/components/schemas/DiagnosticTest' } } } } },
+        },
+      },
+      '/api/diagnostics/all': {
+        get: {
+          tags: ['Diagnostics'],
+          summary: 'Admin list all diagnostic tests',
+          responses: {
+            200: {
+              description: 'List',
+              content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/DiagnosticTest' } } } },
+            },
+          },
+        },
+      },
+      '/api/diagnostics/{id}': {
+        get: {
+          tags: ['Diagnostics'],
+          summary: 'Get diagnostic test by id',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: {
+            200: { description: 'Diagnostic test', content: { 'application/json': { schema: { $ref: '#/components/schemas/DiagnosticTest' } } } },
+            404: { description: 'Not found' },
+          },
+        },
+        put: {
+          tags: ['Diagnostics'],
+          summary: 'Update diagnostic test',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    type: { type: 'string' },
+                    result: { type: 'string' },
+                    status: { type: 'string', enum: ['requested', 'in-progress', 'completed'] },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            200: { description: 'Updated', content: { 'application/json': { schema: { $ref: '#/components/schemas/DiagnosticTest' } } } },
+            404: { description: 'Not found' },
+          },
+        },
+        delete: {
+          tags: ['Diagnostics'],
+          summary: 'Delete diagnostic test',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { 200: { description: 'Deleted' }, 404: { description: 'Not found' } },
+        },
       },
       '/api/diagnostics/{id}/result': {
         patch: {
           tags: ['Diagnostics'],
           summary: 'Upload diagnostic result',
           parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
-          responses: { 200: { description: 'Updated' } },
+          requestBody: {
+            required: true,
+            content: { 'application/json': { schema: { type: 'object', required: ['result'], properties: { result: { type: 'string' } } } } },
+          },
+          responses: {
+            200: { description: 'Updated', content: { 'application/json': { schema: { $ref: '#/components/schemas/DiagnosticTest' } } } },
+          },
         },
       },
       '/api/admin/users': {
@@ -382,6 +708,52 @@ const options: swaggerJsdoc.Options = {
       },
       '/api/admin/analytics': {
         get: { tags: ['Admin'], summary: 'View analytics', responses: { 200: { description: 'Analytics' } } },
+      },
+      '/api/subscriptions': {
+        get: { tags: ['Subscriptions'], summary: 'List subscriptions (admin)', responses: { 200: { description: 'List' } } },
+        post: {
+          tags: ['Subscriptions'],
+          summary: 'Create subscription (admin)',
+          requestBody: {
+            required: true,
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/SubscriptionCreate' } } },
+          },
+          responses: { 201: { description: 'Created' } },
+        },
+      },
+      '/api/subscriptions/{id}': {
+        get: {
+          tags: ['Subscriptions'],
+          summary: 'Get subscription by id (admin)',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { 200: { description: 'Subscription' }, 404: { description: 'Not found' } },
+        },
+        put: {
+          tags: ['Subscriptions'],
+          summary: 'Update subscription (admin)',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    plan: { type: 'string' },
+                    status: { type: 'string', enum: ['active', 'inactive', 'cancelled'] },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Updated' }, 404: { description: 'Not found' } },
+        },
+        delete: {
+          tags: ['Subscriptions'],
+          summary: 'Delete subscription (admin)',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { 200: { description: 'Deleted' }, 404: { description: 'Not found' } },
+        },
       },
       '/api/ai': {
         post: {

@@ -93,3 +93,53 @@ export const fetchSensorHistory = async ({ device_id, limit = 50 }: HistoryOptio
 
   return SensorReading.find(query).sort({ timestamp: -1, createdAt: -1 }).limit(limit).lean();
 };
+
+export const getSensorReadingById = async (id: string) => {
+  if (!isDatabaseReady()) {
+    const reading = memoryReadings.find((r) => r._id === id);
+    if (!reading) throw new ApiError(404, 'Sensor reading not found');
+    return reading;
+  }
+
+  const reading = await SensorReading.findById(id);
+  if (!reading) throw new ApiError(404, 'Sensor reading not found');
+  return reading;
+};
+
+export const updateSensorReading = async (id: string, payload: Partial<SensorPayload>) => {
+  if (!isDatabaseReady()) {
+    const idx = memoryReadings.findIndex((r) => r._id === id);
+    if (idx === -1) throw new ApiError(404, 'Sensor reading not found');
+    const merged = {
+      ...memoryReadings[idx],
+      ...payload,
+      sensors: { ...memoryReadings[idx].sensors, ...(payload.sensors || {}) },
+      alerts: { ...memoryReadings[idx].alerts, ...(payload.alerts || {}) },
+      timestamp: payload.timestamp ? new Date(payload.timestamp) : memoryReadings[idx].timestamp,
+      updatedAt: new Date(),
+    };
+    memoryReadings[idx] = merged;
+    return merged;
+  }
+
+  const reading = await SensorReading.findByIdAndUpdate(
+    id,
+    { ...payload, timestamp: payload.timestamp ? new Date(payload.timestamp) : undefined },
+    { new: true },
+  );
+  if (!reading) throw new ApiError(404, 'Sensor reading not found');
+  return reading;
+};
+
+export const deleteSensorReading = async (id: string) => {
+  if (!isDatabaseReady()) {
+    const idx = memoryReadings.findIndex((r) => r._id === id);
+    if (idx === -1) throw new ApiError(404, 'Sensor reading not found');
+    const [removed] = memoryReadings.splice(idx, 1);
+    return removed;
+  }
+
+  const reading = await SensorReading.findByIdAndDelete(id);
+  if (!reading) throw new ApiError(404, 'Sensor reading not found');
+  return reading;
+};

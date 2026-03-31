@@ -13,6 +13,7 @@ import adminRoutes from './routes/admin.routes';
 import aiRoutes from './routes/ai.routes';
 import chatRoutes from './routes/chat.routes';
 import sensorDataRoutes from './routes/sensorData.routes';
+import subscriptionRoutes from './routes/subscription.routes';
 import { errorHandler } from './middlewares/error.middleware';
 import { swaggerSpec } from './docs/swagger';
 
@@ -108,6 +109,8 @@ export const createApp = () => {
   app.use('/api/admin', adminRoutes);
   app.use('/api/ai', aiRoutes);
   app.use('/api/chat', chatRoutes);
+  app.use('/api/v1/data', sensorDataRoutes);
+  app.use('/api/subscriptions', subscriptionRoutes);
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

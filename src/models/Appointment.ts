@@ -19,5 +19,8 @@ const appointmentSchema = new Schema<IAppointment>(
   { timestamps: true },
 );
 
+appointmentSchema.index({ patientId: 1, date: -1 });
+appointmentSchema.index({ doctorId: 1, date: -1 });
+
 export const Appointment = model<IAppointment>('Appointment', appointmentSchema);
 

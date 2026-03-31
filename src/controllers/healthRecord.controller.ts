@@ -21,3 +21,30 @@ export const fetch = async (req: AuthRequest, res: Response, next: NextFunction)
   }
 };
 
+export const getOne = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const record = await HealthService.getRecordById(req.params.id);
+    res.json(record);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const update = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const record = await HealthService.updateRecord(req.params.id, req.body);
+    res.json(record);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const remove = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const record = await HealthService.deleteRecord(req.params.id);
+    res.json(record);
+  } catch (err) {
+    next(err);
+  }
+};
+
