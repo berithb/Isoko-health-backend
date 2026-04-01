@@ -51,7 +51,22 @@ const statusSchema = zod_1.z.object({
     }),
     params: zod_1.z.object({ id: zod_1.z.string() }),
 });
+const updateSchema = zod_1.z.object({
+    body: zod_1.z.object({
+        doctorId: zod_1.z.string().optional(),
+        date: zod_1.z
+            .string()
+            .transform((d) => new Date(d))
+            .optional(),
+        status: zod_1.z.enum(['pending', 'completed', 'cancelled']).optional(),
+    }),
+    params: zod_1.z.object({ id: zod_1.z.string() }),
+});
+const idSchema = zod_1.z.object({ params: zod_1.z.object({ id: zod_1.z.string() }) });
 router.post('/', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['patient', 'caregiver']), (0, validation_middleware_1.validate)(bookSchema), AppointmentController.book);
 router.get('/', auth_middleware_1.authenticate, AppointmentController.list);
+router.get('/:id', auth_middleware_1.authenticate, (0, validation_middleware_1.validate)(idSchema), AppointmentController.getOne);
+router.put('/:id', auth_middleware_1.authenticate, (0, validation_middleware_1.validate)(updateSchema), AppointmentController.update);
 router.patch('/:id/status', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['doctor', 'admin']), (0, validation_middleware_1.validate)(statusSchema), AppointmentController.updateStatus);
+router.delete('/:id', auth_middleware_1.authenticate, (0, validation_middleware_1.validate)(idSchema), AppointmentController.remove);
 exports.default = router;

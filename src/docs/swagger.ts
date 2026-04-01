@@ -16,10 +16,12 @@ const options: swaggerJsdoc.Options = {
       { name: 'Diagnostics' },
       { name: 'Admin' },
       { name: 'AI' },
+      { name: 'Doctors' },
       { name: 'Chat' },
       { name: 'SensorData' },
       { name: 'Subscriptions' },
     ],
+
     servers: [{ url: 'http://localhost:4000', description: 'Local development' }],
     components: {
       securitySchemes: {
@@ -33,9 +35,20 @@ const options: swaggerJsdoc.Options = {
             name: { type: 'string' },
             email: { type: 'string' },
             role: { type: 'string', enum: ['patient', 'doctor', 'admin', 'caregiver'] },
+            specialization: { type: 'string' },
+            rating: { type: 'number' },
+            reviewCount: { type: 'number' },
+            isAvailable: { type: 'boolean' },
+            consultationFee: { type: 'number' },
+            consultationMethods: {
+              type: 'array',
+              items: { type: 'string', enum: ['Chat', 'Video'] }
+            },
+            avatar: { type: 'string' },
             createdAt: { type: 'string', format: 'date-time' },
           },
         },
+
         UserRegister: {
           type: 'object',
           required: ['name', 'email', 'password'],

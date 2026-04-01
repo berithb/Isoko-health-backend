@@ -34,22 +34,12 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const zod_1 = require("zod");
-const HealthController = __importStar(require("../controllers/healthRecord.controller"));
+const DoctorController = __importStar(require("../controllers/doctor.controller"));
 const auth_middleware_1 = require("../middlewares/auth.middleware");
-const validation_middleware_1 = require("../middlewares/validation.middleware");
 const router = (0, express_1.Router)();
-const vitalsSchema = zod_1.z.object({
-    body: zod_1.z.object({
-        bloodPressure: zod_1.z.string().optional(),
-        glucose: zod_1.z.number().optional(),
-        temperature: zod_1.z.number().optional(),
-    }),
-});
-const idSchema = zod_1.z.object({ params: zod_1.z.object({ id: zod_1.z.string() }) });
-router.post('/', auth_middleware_1.authenticate, (0, validation_middleware_1.validate)(vitalsSchema), HealthController.submit);
-router.get('/', auth_middleware_1.authenticate, HealthController.fetch);
-router.get('/:id', auth_middleware_1.authenticate, (0, validation_middleware_1.validate)(idSchema), HealthController.getOne);
-router.put('/:id', auth_middleware_1.authenticate, (0, validation_middleware_1.validate)(vitalsSchema.merge(idSchema)), HealthController.update);
-router.delete('/:id', auth_middleware_1.authenticate, (0, validation_middleware_1.validate)(idSchema), HealthController.remove);
+// Public endpoint so landing and consultation pages can surface data
+router.get('/', DoctorController.list);
+router.get('/:id', DoctorController.getOne);
+router.post('/', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['admin']), DoctorController.create);
+router.patch('/:id', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['admin']), DoctorController.update);
 exports.default = router;

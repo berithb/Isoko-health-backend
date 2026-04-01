@@ -1,4 +1,7 @@
 import { User } from '../models/User';
+import { Doctor, IDoctor } from '../models/Doctor';
+import { ApiError } from '../utils/apiError';
+import { Types } from 'mongoose';
 
 export type DoctorProfile = {
   id: string;
@@ -14,6 +17,21 @@ export type DoctorProfile = {
   experienceYears?: number;
   nextAvailable?: string;
 };
+
+const mapToProfile = (doc: any): DoctorProfile => ({
+  id: doc._id.toString(),
+  name: doc.userId.name,
+  email: doc.userId.email,
+  specialty: doc.specialty,
+  bio: doc.bio,
+  rating: doc.rating,
+  reviewsCount: doc.reviewsCount,
+  price: doc.consultationFee,
+  modes: doc.consultationModes,
+  languages: doc.languages,
+  experienceYears: doc.experienceYears,
+  nextAvailable: doc.nextAvailable || doc.availabilityStatus,
+});
 
 const fallbackDoctors: DoctorProfile[] = [
   {
@@ -97,53 +115,40 @@ const fallbackDoctors: DoctorProfile[] = [
 ];
 
 export const listDoctors = async (): Promise<DoctorProfile[]> => {
-  const doctors = await User.find({ role: 'doctor' }).select('name email createdAt');
-
-  if (!doctors.length) {
-    return fallbackDoctors;
-  }
-
-  return doctors.map((doctor, index) => ({
-    id: doctor.id,
-    name: doctor.name,
-    email: doctor.email,
-    specialty: 'General Medicine',
-    rating: 4.7,
-    reviewsCount: 50 + index * 7,
-    price: '12,000 RWF',
-    modes: ['video', 'chat'],
-    languages: ['Kinyarwanda', 'English'],
-    experienceYears: 5 + index,
-    nextAvailable: 'Today',
-    bio: 'Licensed medical doctor available for virtual consultations.',
-  }));
+  return fallbackDoctors;
 };
 
 export const getDoctorById = async (id: string): Promise<DoctorProfile | null> => {
   if (!id) return null;
 
-  const seeded = fallbackDoctors.find((doctor) => doctor.id === id);
-  if (seeded) {
-    return seeded;
+  const doctor = fallbackDoctors.find((doctor) => doctor.id === id);
+  if (doctor) {
+    return doctor;
   }
 
-  const doctor = await User.findById(id).select('name email createdAt role');
-  if (!doctor || doctor.role !== 'doctor') {
-    return null;
-  }
+  return null;
+};
 
-  return {
-    id: doctor.id,
-    name: doctor.name,
-    email: doctor.email,
-    specialty: 'General Medicine',
-    rating: 4.7,
-    reviewsCount: 52,
-    price: '12,000 RWF',
-    modes: ['video', 'chat'],
-    languages: ['Kinyarwanda', 'English'],
-    experienceYears: 6,
-    nextAvailable: 'Today',
-    bio: 'Doctor available for teleconsultation.',
+export const createDoctor = async (userId: string, profile: Partial<Omit<IDoctor, 'userId'>>) => {
+
+  const user = await User.findById(userId);
+  if (!user || user.role !== 'doctor') {
+    throw new ApiError(400, 'User must have doctor role');
+  }
+  const doctorData = {
+    userId: new Types.ObjectId(userId),
+    ...profile,
   };
+  const doctor = await Doctor.create(doctorData as IDoctor);
+  await doctor.populate('userId', 'name email');
+  return mapToProfile(doctor.toObject());
+};
+
+export const updateDoctor = async (id: string, updates: Partial<IDoctor>) => {
+  const doctor = await Doctor.findByIdAndUpdate(id, updates, { new: true });
+  if (!doctor) {
+    throw new ApiError(404, 'Doctor not found');
+  }
+  await doctor.populate('userId', 'name email');
+  return mapToProfile(doctor.toObject());
 };

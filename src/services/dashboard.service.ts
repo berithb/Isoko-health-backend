@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { Appointment } from '../models/Appointment';
 import { DiagnosticTest } from '../models/DiagnosticTest';
+import { Doctor } from '../models/Doctor';
 import { Subscription } from '../models/Subscription';
 import { User, UserRole } from '../models/User';
 
@@ -22,9 +23,14 @@ export const getDashboardData = async (user: DashboardUser) => {
 
   const appointmentFilter: Record<string, unknown> = {};
   const patientId = isPatient ? normalizeId(user.id) : undefined;
-  const doctorId = isDoctor ? normalizeId(user.id) : undefined;
+  if (isDoctor) {
+    const doctorUserId = normalizeId(user.id);
+    const doctor = await Doctor.findOne({ userId: doctorUserId });
+    if (doctor) {
+      appointmentFilter.doctorId = doctor._id;
+    }
+  }
   if (patientId) appointmentFilter.patientId = patientId;
-  if (doctorId) appointmentFilter.doctorId = doctorId;
 
   const diagnosticFilter: Record<string, unknown> = {};
   const diagnosticUserId = isPatient ? normalizeId(user.id) : undefined;

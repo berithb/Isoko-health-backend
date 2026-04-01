@@ -1,12 +1,26 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateAppointmentStatus = exports.getAppointments = exports.bookAppointment = void 0;
+exports.deleteAppointment = exports.updateAppointmentStatus = exports.updateAppointment = exports.getAppointmentById = exports.getAppointments = exports.bookAppointment = void 0;
 const apiError_1 = require("../utils/apiError");
 const Appointment_1 = require("../models/Appointment");
 const bookAppointment = async (data) => Appointment_1.Appointment.create(data);
 exports.bookAppointment = bookAppointment;
 const getAppointments = async (filter) => Appointment_1.Appointment.find(filter);
 exports.getAppointments = getAppointments;
+const getAppointmentById = async (id) => {
+    const appointment = await Appointment_1.Appointment.findById(id);
+    if (!appointment)
+        throw new apiError_1.ApiError(404, 'Appointment not found');
+    return appointment;
+};
+exports.getAppointmentById = getAppointmentById;
+const updateAppointment = async (id, payload) => {
+    const appointment = await Appointment_1.Appointment.findByIdAndUpdate(id, payload, { new: true });
+    if (!appointment)
+        throw new apiError_1.ApiError(404, 'Appointment not found');
+    return appointment;
+};
+exports.updateAppointment = updateAppointment;
 const updateAppointmentStatus = async (id, status) => {
     const appointment = await Appointment_1.Appointment.findById(id);
     if (!appointment)
@@ -16,3 +30,10 @@ const updateAppointmentStatus = async (id, status) => {
     return appointment;
 };
 exports.updateAppointmentStatus = updateAppointmentStatus;
+const deleteAppointment = async (id) => {
+    const appointment = await Appointment_1.Appointment.findByIdAndDelete(id);
+    if (!appointment)
+        throw new apiError_1.ApiError(404, 'Appointment not found');
+    return appointment;
+};
+exports.deleteAppointment = deleteAppointment;

@@ -11,7 +11,12 @@ const config_1 = require("./config");
 const socket_1 = require("./realtime/socket");
 const app = (0, app_1.createApp)();
 const server = http_1.default.createServer(app);
+const isProduction = config_1.env.nodeEnv === 'production';
 const socketOrigins = config_1.env.corsOrigin === '*' ? '*' : config_1.env.corsOrigin.split(',').map((origin) => origin.trim());
+// Block wildcard in production for Socket.IO
+if (isProduction && socketOrigins === '*') {
+    throw new Error('Socket.IO CORS cannot be "*" in production. Set CORS_ORIGIN to your frontend domain(s).');
+}
 const io = new socket_io_1.Server(server, {
     cors: {
         origin: socketOrigins,

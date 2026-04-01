@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetch = exports.submit = void 0;
+exports.remove = exports.update = exports.getOne = exports.fetch = exports.submit = void 0;
 const HealthService = __importStar(require("../services/healthRecord.service"));
 const submit = async (req, res, next) => {
     try {
@@ -56,3 +56,33 @@ const fetch = async (req, res, next) => {
     }
 };
 exports.fetch = fetch;
+const getOne = async (req, res, next) => {
+    try {
+        const record = await HealthService.getRecordById(req.params.id);
+        res.json(record);
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.getOne = getOne;
+const update = async (req, res, next) => {
+    try {
+        const record = await HealthService.updateRecord(req.params.id, req.body);
+        res.json(record);
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.update = update;
+const remove = async (req, res, next) => {
+    try {
+        const record = await HealthService.deleteRecord(req.params.id);
+        res.json(record);
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.remove = remove;

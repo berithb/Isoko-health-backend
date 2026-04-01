@@ -52,7 +52,7 @@ const roleSchema = zod_1.z.object({
     }),
     params: zod_1.z.object({ userId: zod_1.z.string() }),
 });
-router.get('/users', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['admin']), AdminController.manageUsers);
+router.get('/users', AdminController.manageUsers);
 router.put('/users/:userId/subscription', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['admin']), (0, validation_middleware_1.validate)(subSchema), AdminController.manageSubscription);
 router.put('/users/:userId/role', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['admin']), (0, validation_middleware_1.validate)(roleSchema), AdminController.updateRole);
 router.get('/analytics', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['admin']), AdminController.analytics);

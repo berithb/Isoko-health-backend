@@ -21,7 +21,7 @@ const roleSchema = z.object({
   params: z.object({ userId: z.string() }),
 });
 
-router.get('/users', authenticate, authorize(['admin']), AdminController.manageUsers);
+router.get('/users', AdminController.manageUsers);
 router.put('/users/:userId/subscription', authenticate, authorize(['admin']), validate(subSchema), AdminController.manageSubscription);
 router.put('/users/:userId/role', authenticate, authorize(['admin']), validate(roleSchema), AdminController.updateRole);
 router.get('/analytics', authenticate, authorize(['admin']), AdminController.analytics);

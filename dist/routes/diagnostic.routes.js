@@ -48,7 +48,20 @@ const uploadSchema = zod_1.z.object({
     body: zod_1.z.object({ result: zod_1.z.string() }),
     params: zod_1.z.object({ id: zod_1.z.string() }),
 });
+const updateSchema = zod_1.z.object({
+    body: zod_1.z.object({
+        type: zod_1.z.string().optional(),
+        result: zod_1.z.string().optional(),
+        status: zod_1.z.enum(['requested', 'in-progress', 'completed']).optional(),
+    }),
+    params: zod_1.z.object({ id: zod_1.z.string() }),
+});
+const idSchema = zod_1.z.object({ params: zod_1.z.object({ id: zod_1.z.string() }) });
 router.post('/', auth_middleware_1.authenticate, (0, validation_middleware_1.validate)(requestSchema), DiagnosticController.requestTest);
 router.patch('/:id/result', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['doctor', 'admin']), (0, validation_middleware_1.validate)(uploadSchema), DiagnosticController.uploadResult);
 router.get('/', auth_middleware_1.authenticate, DiagnosticController.getResults);
+router.get('/all', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['admin']), DiagnosticController.list);
+router.get('/:id', auth_middleware_1.authenticate, (0, validation_middleware_1.validate)(idSchema), DiagnosticController.getOne);
+router.put('/:id', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['doctor', 'admin']), (0, validation_middleware_1.validate)(updateSchema), DiagnosticController.update);
+router.delete('/:id', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['admin']), (0, validation_middleware_1.validate)(idSchema), DiagnosticController.remove);
 exports.default = router;

@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getResults = exports.uploadResult = exports.requestTest = void 0;
+exports.remove = exports.update = exports.list = exports.getOne = exports.getResults = exports.uploadResult = exports.requestTest = void 0;
 const DiagnosticService = __importStar(require("../services/diagnostic.service"));
 const requestTest = async (req, res, next) => {
     try {
@@ -65,3 +65,43 @@ const getResults = async (req, res, next) => {
     }
 };
 exports.getResults = getResults;
+const getOne = async (req, res, next) => {
+    try {
+        const test = await DiagnosticService.getTestById(req.params.id);
+        res.json(test);
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.getOne = getOne;
+const list = async (_req, res, next) => {
+    try {
+        const tests = await DiagnosticService.getTests({});
+        res.json(tests);
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.list = list;
+const update = async (req, res, next) => {
+    try {
+        const test = await DiagnosticService.updateTest(req.params.id, req.body);
+        res.json(test);
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.update = update;
+const remove = async (req, res, next) => {
+    try {
+        const test = await DiagnosticService.deleteTest(req.params.id);
+        res.json(test);
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.remove = remove;

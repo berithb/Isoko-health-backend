@@ -19,12 +19,34 @@ const admin_routes_1 = __importDefault(require("./routes/admin.routes"));
 const ai_routes_1 = __importDefault(require("./routes/ai.routes"));
 const chat_routes_1 = __importDefault(require("./routes/chat.routes"));
 const sensorData_routes_1 = __importDefault(require("./routes/sensorData.routes"));
+const subscription_routes_1 = __importDefault(require("./routes/subscription.routes"));
+const dashboard_routes_1 = __importDefault(require("./routes/dashboard.routes"));
+const doctor_routes_1 = __importDefault(require("./routes/doctor.routes"));
+const plan_routes_1 = __importDefault(require("./routes/plan.routes"));
 const error_middleware_1 = require("./middlewares/error.middleware");
 const swagger_1 = require("./docs/swagger");
 const createApp = () => {
     const app = (0, express_1.default)();
-    const allowedOrigins = config_1.env.corsOrigin === '*' ? true : config_1.env.corsOrigin.split(',').map((origin) => origin.trim());
-    app.use((0, cors_1.default)({ origin: allowedOrigins }));
+    // Determine allowed origins based on environment
+    const isProduction = config_1.env.nodeEnv === 'production';
+    const defaultOrigins = isProduction ? [] : ['http://localhost:8081', 'http://localhost:3000'];
+    const envOrigins = config_1.env.corsOrigin === '*'
+        ? ['*']
+        : config_1.env.corsOrigin
+            .split(',')
+            .map((origin) => origin.trim())
+            .filter(Boolean);
+    // Block wildcard in production
+    if (isProduction && envOrigins.includes('*')) {
+        throw new Error('CORS_ORIGIN cannot be "*" in production. Specify explicit allowed origins.');
+    }
+    const mergedOrigins = envOrigins.includes('*')
+        ? '*'
+        : Array.from(new Set([...defaultOrigins, ...envOrigins]));
+    app.use((0, cors_1.default)({
+        origin: mergedOrigins,
+        credentials: true,
+    }));
     app.use(express_1.default.json());
     app.use((0, helmet_1.default)({
         contentSecurityPolicy: {
@@ -36,7 +58,7 @@ const createApp = () => {
         crossOriginOpenerPolicy: false,
         originAgentCluster: false,
     }));
-    app.use((0, morgan_1.default)('dev'));
+    app.use((0, morgan_1.default)(isProduction ? 'combined' : 'dev'));
     app.get('/', (_req, res) => {
         res.type('html').send(`
       <!doctype html>
@@ -124,6 +146,10 @@ const createApp = () => {
     app.use('/api/ai', ai_routes_1.default);
     app.use('/api/chat', chat_routes_1.default);
     app.use('/api/v1/data', sensorData_routes_1.default);
+    app.use('/api/subscriptions', subscription_routes_1.default);
+    app.use('/api/dashboard', dashboard_routes_1.default);
+    app.use('/api/doctors', doctor_routes_1.default);
+    app.use('/api/plans', plan_routes_1.default);
     app.get('/api-docs.json', (_req, res) => {
         res.json(swagger_1.swaggerSpec);
     });

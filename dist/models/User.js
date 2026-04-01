@@ -11,10 +11,23 @@ const userSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ['patient', 'doctor', 'admin', 'caregiver'], default: 'patient' },
+    role: {
+        type: String,
+        enum: ['patient', 'doctor', 'admin', 'caregiver'],
+        default: 'patient'
+    },
+    // Added Doctor Specific Fields
+    specialization: { type: String },
+    rating: { type: Number, default: 0 },
+    reviewCount: { type: Number, default: 0 },
+    isAvailable: { type: Boolean, default: false },
+    consultationFee: { type: Number },
+    consultationMethods: [{ type: String, enum: ['Chat', 'Video'] }],
+    avatar: { type: String },
     passwordResetToken: { type: String },
     passwordResetExpires: { type: Date },
-}, { timestamps: { createdAt: true, updatedAt: false } });
+}, { timestamps: { createdAt: true, updatedAt: true } } // Changed updatedAt to true for profile edits
+);
 userSchema.pre('save', async function hashPassword(next) {
     if (!this.isModified('password'))
         return next();

@@ -22,8 +22,9 @@ import { swaggerSpec } from './docs/swagger';
 
 export const createApp = () => {
   const app = express();
-  // Allow a stable list of frontend hosts plus any provided via ENV.
-  const defaultOrigins = ['http://localhost:8081', 'http://localhost:3000'];
+  // Determine allowed origins based on environment
+  const isProduction = env.nodeEnv === 'production';
+  const defaultOrigins = isProduction ? [] : ['http://localhost:8081', 'http://localhost:3000'];
   const envOrigins =
     env.corsOrigin === '*'
       ? ['*']
@@ -31,6 +32,10 @@ export const createApp = () => {
           .split(',')
           .map((origin) => origin.trim())
           .filter(Boolean);
+  // Block wildcard in production
+  if (isProduction && envOrigins.includes('*')) {
+    throw new Error('CORS_ORIGIN cannot be "*" in production. Specify explicit allowed origins.');
+  }
   const mergedOrigins = envOrigins.includes('*')
     ? '*'
     : Array.from(new Set([...defaultOrigins, ...envOrigins]));
@@ -54,7 +59,7 @@ export const createApp = () => {
       originAgentCluster: false,
     }),
   );
-  app.use(morgan('dev'));
+  app.use(morgan(isProduction ? 'combined' : 'dev'));
 
   app.get('/', (_req, res) => {
     res.type('html').send(`

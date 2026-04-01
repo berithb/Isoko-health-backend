@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.forgotPassword = exports.login = exports.register = void 0;
+exports.listRoles = exports.resetPassword = exports.forgotPassword = exports.login = exports.register = void 0;
 const AuthService = __importStar(require("../services/auth.service"));
 const register = async (req, res, next) => {
     try {
@@ -75,3 +75,7 @@ const resetPassword = async (req, res, next) => {
     }
 };
 exports.resetPassword = resetPassword;
+const listRoles = (_req, res) => {
+    res.json({ roles: ['patient', 'doctor', 'admin', 'caregiver'] });
+};
+exports.listRoles = listRoles;

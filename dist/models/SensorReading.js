@@ -17,4 +17,5 @@ const sensorReadingSchema = new mongoose_1.Schema({
         emergency: { type: Boolean, required: true },
     },
 }, { timestamps: true });
+sensorReadingSchema.index({ device_id: 1, timestamp: -1 });
 exports.SensorReading = (0, mongoose_1.model)('SensorReading', sensorReadingSchema);
