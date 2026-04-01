@@ -66,8 +66,34 @@ const historyQuerySchema = zod_1.z.object({
     body: zod_1.z.object({}).optional(),
     params: zod_1.z.object({}).optional(),
 });
+const idSchema = zod_1.z.object({ params: zod_1.z.object({ id: zod_1.z.string() }) });
+const updateSensorDataSchema = zod_1.z.object({
+    body: zod_1.z.object({
+        device_id: zod_1.z.string().min(1).optional(),
+        timestamp: isoDateSchema.optional(),
+        sensors: zod_1.z
+            .object({
+            temperature: zod_1.z.number().optional(),
+            humidity: zod_1.z.number().optional(),
+            distance: zod_1.z.number().optional(),
+            motion: zod_1.z.number().optional(),
+        })
+            .optional(),
+        alerts: zod_1.z
+            .object({
+            fall_detected: zod_1.z.boolean().optional(),
+            fever_detected: zod_1.z.boolean().optional(),
+            emergency: zod_1.z.boolean().optional(),
+        })
+            .optional(),
+    }),
+    params: zod_1.z.object({ id: zod_1.z.string() }),
+});
 router.post('/', (0, validation_middleware_1.validate)(createSensorDataSchema), SensorDataController.create);
 router.get('/', SensorDataController.index);
 router.get('/latest', SensorDataController.fetchLatest);
 router.get('/history', (0, validation_middleware_1.validate)(historyQuerySchema), SensorDataController.fetchHistory);
+router.get('/:id', (0, validation_middleware_1.validate)(idSchema), SensorDataController.getOne);
+router.put('/:id', (0, validation_middleware_1.validate)(updateSensorDataSchema), SensorDataController.update);
+router.delete('/:id', (0, validation_middleware_1.validate)(idSchema), SensorDataController.remove);
 exports.default = router;

@@ -1,12 +1,9 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.runFeature = void 0;
-const openai_1 = __importDefault(require("openai"));
 const config_1 = require("../config");
 const apiError_1 = require("../utils/apiError");
+const generative_ai_1 = require("@google/generative-ai");
 const promptMap = {
     symptom_checker: {
         system: 'You are a medical triage assistant. Based on symptoms, suggest urgency level (emergency/soon/routine) and relevant specialist. Never diagnose; always recommend seeing a doctor.',
@@ -30,9 +27,9 @@ const promptMap = {
     },
 };
 const getClient = () => {
-    if (!config_1.env.openaiApiKey)
-        throw new apiError_1.ApiError(500, 'OPENAI_API_KEY is missing');
-    return new openai_1.default({ apiKey: config_1.env.openaiApiKey });
+    if (!config_1.env.geminiApiKey)
+        throw new apiError_1.ApiError(500, 'GEMINI_API_KEY is missing');
+    return new generative_ai_1.GoogleGenerativeAI(config_1.env.geminiApiKey);
 };
 const runFeature = async (feature, payload, previewOnly = false) => {
     const config = promptMap[feature];
@@ -43,17 +40,12 @@ const runFeature = async (feature, payload, previewOnly = false) => {
     if (previewOnly)
         return { ...base, reply: undefined };
     const client = getClient();
-    const input = [
-        { role: 'system', content: config.system },
-        { role: 'user', content: userMessage },
-    ];
-    const response = await client.responses.create({
-        model: 'gpt-4.1-mini',
-        input,
-    });
-    const text = response.output_text?.trim();
+    const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const prompt = `${config.system}\n\n${userMessage}`;
+    const result = await model.generateContent(prompt);
+    const text = await result.response.text();
     if (!text)
-        throw new apiError_1.ApiError(502, 'Empty response from OpenAI');
-    return { ...base, reply: text };
+        throw new apiError_1.ApiError(502, 'Empty response from Gemini');
+    return { ...base, reply: text.trim() };
 };
 exports.runFeature = runFeature;

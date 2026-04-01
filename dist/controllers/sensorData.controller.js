@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchHistory = exports.fetchLatest = exports.create = exports.index = void 0;
+exports.remove = exports.update = exports.getOne = exports.fetchHistory = exports.fetchLatest = exports.create = exports.index = void 0;
 const socket_1 = require("../realtime/socket");
 const SensorDataService = __importStar(require("../services/sensorData.service"));
 const index = (_req, res) => {
@@ -85,3 +85,33 @@ const fetchHistory = async (req, res, next) => {
     }
 };
 exports.fetchHistory = fetchHistory;
+const getOne = async (req, res, next) => {
+    try {
+        const reading = await SensorDataService.getSensorReadingById(req.params.id);
+        res.json(reading);
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.getOne = getOne;
+const update = async (req, res, next) => {
+    try {
+        const reading = await SensorDataService.updateSensorReading(req.params.id, req.body);
+        res.json(reading);
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.update = update;
+const remove = async (req, res, next) => {
+    try {
+        const reading = await SensorDataService.deleteSensorReading(req.params.id);
+        res.json(reading);
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.remove = remove;

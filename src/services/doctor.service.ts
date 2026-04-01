@@ -127,8 +127,10 @@ export const getDoctorById = async (id: string): Promise<DoctorProfile | null> =
   }
 
   return null;
+};
 
 export const createDoctor = async (userId: string, profile: Partial<Omit<IDoctor, 'userId'>>) => {
+
   const user = await User.findById(userId);
   if (!user || user.role !== 'doctor') {
     throw new ApiError(400, 'User must have doctor role');

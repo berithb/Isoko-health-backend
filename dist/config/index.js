@@ -38,10 +38,22 @@ exports.getDbStatus = getDbStatus;
 exports.env = {
     port: Number(process.env.PORT) || 4000,
     host: process.env.HOST || '0.0.0.0',
-    corsOrigin: process.env.CORS_ORIGIN || '*',
+    corsOrigin: process.env.CORS_ORIGIN || (normalizedNodeEnv === 'production' ? '' : '*'),
     nodeEnv: normalizedNodeEnv,
-    jwtSecret: process.env.JWT_SECRET || 'change_me',
+    jwtSecret: process.env.JWT_SECRET || (normalizedNodeEnv === 'production' ? '' : 'dev_secret_change_me'),
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
-    openaiApiKey: process.env.OPENAI_API_KEY,
-    allowSensorMemoryFallback,
+    allowSensorMemoryFallback: process.env.ALLOW_SENSOR_MEMORY_FALLBACK === 'true',
+    geminiApiKey: process.env.GEMINI_API_KEY,
 };
+// Validate critical env vars in production
+if (normalizedNodeEnv === 'production') {
+    if (!exports.env.corsOrigin) {
+        throw new Error('CORS_ORIGIN is required in production. Set it to your frontend domain(s), e.g., "https://myapp.com"');
+    }
+    if (!exports.env.jwtSecret || exports.env.jwtSecret.length < 32) {
+        throw new Error('JWT_SECRET must be at least 32 characters in production');
+    }
+    if (!process.env.MONGO_URI) {
+        throw new Error('MONGO_URI is required in production');
+    }
+}

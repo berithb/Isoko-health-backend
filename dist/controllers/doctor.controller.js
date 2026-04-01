@@ -33,23 +33,48 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const zod_1 = require("zod");
-const HealthController = __importStar(require("../controllers/healthRecord.controller"));
-const auth_middleware_1 = require("../middlewares/auth.middleware");
-const validation_middleware_1 = require("../middlewares/validation.middleware");
-const router = (0, express_1.Router)();
-const vitalsSchema = zod_1.z.object({
-    body: zod_1.z.object({
-        bloodPressure: zod_1.z.string().optional(),
-        glucose: zod_1.z.number().optional(),
-        temperature: zod_1.z.number().optional(),
-    }),
-});
-const idSchema = zod_1.z.object({ params: zod_1.z.object({ id: zod_1.z.string() }) });
-router.post('/', auth_middleware_1.authenticate, (0, validation_middleware_1.validate)(vitalsSchema), HealthController.submit);
-router.get('/', auth_middleware_1.authenticate, HealthController.fetch);
-router.get('/:id', auth_middleware_1.authenticate, (0, validation_middleware_1.validate)(idSchema), HealthController.getOne);
-router.put('/:id', auth_middleware_1.authenticate, (0, validation_middleware_1.validate)(vitalsSchema.merge(idSchema)), HealthController.update);
-router.delete('/:id', auth_middleware_1.authenticate, (0, validation_middleware_1.validate)(idSchema), HealthController.remove);
-exports.default = router;
+exports.update = exports.create = exports.getOne = exports.list = void 0;
+const DoctorService = __importStar(require("../services/doctor.service"));
+const list = async (_req, res, next) => {
+    try {
+        const doctors = await DoctorService.listDoctors();
+        res.json(doctors);
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.list = list;
+const getOne = async (req, res, next) => {
+    try {
+        const doctor = await DoctorService.getDoctorById(req.params.id);
+        if (!doctor) {
+            return res.status(404).json({ message: 'Doctor not found' });
+        }
+        res.json(doctor);
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.getOne = getOne;
+const create = async (req, res, next) => {
+    try {
+        const doctor = await DoctorService.createDoctor(req.body.userId, req.body);
+        res.status(201).json(doctor);
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.create = create;
+const update = async (req, res, next) => {
+    try {
+        const doctor = await DoctorService.updateDoctor(req.params.id, req.body);
+        res.json(doctor);
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.update = update;

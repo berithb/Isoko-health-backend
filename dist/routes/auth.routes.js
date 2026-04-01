@@ -66,4 +66,5 @@ router.post('/register', (0, validation_middleware_1.validate)(registerSchema), 
 router.post('/login', (0, validation_middleware_1.validate)(loginSchema), AuthController.login);
 router.post('/forgot-password', (0, validation_middleware_1.validate)(forgotSchema), AuthController.forgotPassword);
 router.post('/reset-password', (0, validation_middleware_1.validate)(resetSchema), AuthController.resetPassword);
+router.get('/roles', AuthController.listRoles);
 exports.default = router;

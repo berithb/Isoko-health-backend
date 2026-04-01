@@ -8,4 +8,5 @@ const healthRecordSchema = new mongoose_1.Schema({
     glucose: Number,
     temperature: Number,
 }, { timestamps: { createdAt: true, updatedAt: false } });
+healthRecordSchema.index({ userId: 1, createdAt: -1 });
 exports.HealthRecord = (0, mongoose_1.model)('HealthRecord', healthRecordSchema);

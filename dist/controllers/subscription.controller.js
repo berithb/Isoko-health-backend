@@ -33,26 +33,22 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.remove = exports.updateStatus = exports.update = exports.getOne = exports.list = exports.book = void 0;
-const AppointmentService = __importStar(require("../services/appointment.service"));
-const mongoose_1 = require("mongoose");
-const book = async (req, res, next) => {
+exports.remove = exports.update = exports.getOne = exports.list = exports.create = void 0;
+const SubscriptionService = __importStar(require("../services/subscription.service"));
+const create = async (req, res, next) => {
     try {
-        const appointment = await AppointmentService.bookAppointment({ ...req.body, patientId: req.user.id });
-        res.status(201).json(appointment);
+        const subscription = await SubscriptionService.createSubscription(req.body);
+        res.status(201).json(subscription);
     }
     catch (err) {
         next(err);
     }
 };
-exports.book = book;
-const list = async (req, res, next) => {
+exports.create = create;
+const list = async (_req, res, next) => {
     try {
-        const filter = req.user?.role === 'doctor'
-            ? { doctorId: new mongoose_1.Types.ObjectId(req.user.id) }
-            : { patientId: new mongoose_1.Types.ObjectId(req.user.id) };
-        const appointments = await AppointmentService.getAppointments(filter);
-        res.json(appointments);
+        const subscriptions = await SubscriptionService.listSubscriptions();
+        res.json(subscriptions);
     }
     catch (err) {
         next(err);
@@ -61,8 +57,8 @@ const list = async (req, res, next) => {
 exports.list = list;
 const getOne = async (req, res, next) => {
     try {
-        const appointment = await AppointmentService.getAppointmentById(req.params.id);
-        res.json(appointment);
+        const subscription = await SubscriptionService.getSubscriptionById(req.params.id);
+        res.json(subscription);
     }
     catch (err) {
         next(err);
@@ -71,28 +67,18 @@ const getOne = async (req, res, next) => {
 exports.getOne = getOne;
 const update = async (req, res, next) => {
     try {
-        const appointment = await AppointmentService.updateAppointment(req.params.id, req.body);
-        res.json(appointment);
+        const subscription = await SubscriptionService.updateSubscription(req.params.id, req.body);
+        res.json(subscription);
     }
     catch (err) {
         next(err);
     }
 };
 exports.update = update;
-const updateStatus = async (req, res, next) => {
-    try {
-        const appointment = await AppointmentService.updateAppointmentStatus(req.params.id, req.body.status);
-        res.json(appointment);
-    }
-    catch (err) {
-        next(err);
-    }
-};
-exports.updateStatus = updateStatus;
 const remove = async (req, res, next) => {
     try {
-        const appointment = await AppointmentService.deleteAppointment(req.params.id);
-        res.json(appointment);
+        const subscription = await SubscriptionService.deleteSubscription(req.params.id);
+        res.json(subscription);
     }
     catch (err) {
         next(err);

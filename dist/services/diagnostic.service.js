@@ -1,10 +1,19 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getResults = exports.uploadResult = exports.requestTest = void 0;
+exports.deleteTest = exports.updateTest = exports.getResults = exports.uploadResult = exports.getTests = exports.getTestById = exports.requestTest = void 0;
 const apiError_1 = require("../utils/apiError");
 const DiagnosticTest_1 = require("../models/DiagnosticTest");
 const requestTest = async (payload) => DiagnosticTest_1.DiagnosticTest.create(payload);
 exports.requestTest = requestTest;
+const getTestById = async (id) => {
+    const test = await DiagnosticTest_1.DiagnosticTest.findById(id);
+    if (!test)
+        throw new apiError_1.ApiError(404, 'Diagnostic test not found');
+    return test;
+};
+exports.getTestById = getTestById;
+const getTests = async (filter) => DiagnosticTest_1.DiagnosticTest.find(filter);
+exports.getTests = getTests;
 const uploadResult = async (id, result) => {
     const test = await DiagnosticTest_1.DiagnosticTest.findById(id);
     if (!test)
@@ -17,3 +26,17 @@ const uploadResult = async (id, result) => {
 exports.uploadResult = uploadResult;
 const getResults = async (userId) => DiagnosticTest_1.DiagnosticTest.find({ userId });
 exports.getResults = getResults;
+const updateTest = async (id, payload) => {
+    const test = await DiagnosticTest_1.DiagnosticTest.findByIdAndUpdate(id, payload, { new: true });
+    if (!test)
+        throw new apiError_1.ApiError(404, 'Diagnostic test not found');
+    return test;
+};
+exports.updateTest = updateTest;
+const deleteTest = async (id) => {
+    const test = await DiagnosticTest_1.DiagnosticTest.findByIdAndDelete(id);
+    if (!test)
+        throw new apiError_1.ApiError(404, 'Diagnostic test not found');
+    return test;
+};
+exports.deleteTest = deleteTest;
