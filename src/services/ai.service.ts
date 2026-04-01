@@ -1,7 +1,9 @@
-import OpenAI from 'openai';
-import type { EasyInputMessage } from 'openai/resources/responses/responses';
+
+
 import { env } from '../config';
 import { ApiError } from '../utils/apiError';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 
 export type AiFeature =
   | 'symptom_checker'
@@ -41,9 +43,10 @@ const promptMap: Record<AiFeature, PromptConfig> = {
 };
 
 const getClient = () => {
-  if (!env.openaiApiKey) throw new ApiError(500, 'OPENAI_API_KEY is missing');
-  return new OpenAI({ apiKey: env.openaiApiKey });
+  if (!env.geminiApiKey) throw new ApiError(500, 'GEMINI_API_KEY is missing');
+  return new GoogleGenerativeAI(env.geminiApiKey);
 };
+
 
 export const runFeature = async (feature: AiFeature, payload: any, previewOnly = false) => {
   const config = promptMap[feature];
@@ -54,18 +57,13 @@ export const runFeature = async (feature: AiFeature, payload: any, previewOnly =
   if (previewOnly) return { ...base, reply: undefined };
 
   const client = getClient();
-  const input: EasyInputMessage[] = [
-    { role: 'system', content: config.system },
-    { role: 'user', content: userMessage },
-  ];
+  const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const prompt = `${config.system}\n\n${userMessage}`;
+  const result = await model.generateContent(prompt);
+  const text = await result.response.text();
 
-  const response = await client.responses.create({
-    model: 'gpt-4.1-mini',
-    input,
-  });
+  if (!text) throw new ApiError(502, 'Empty response from Gemini');
 
-  const text = response.output_text?.trim();
-  if (!text) throw new ApiError(502, 'Empty response from OpenAI');
+  return { ...base, reply: text.trim() };
 
-  return { ...base, reply: text };
 };

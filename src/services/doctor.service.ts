@@ -115,30 +115,18 @@ const fallbackDoctors: DoctorProfile[] = [
 ];
 
 export const listDoctors = async (): Promise<DoctorProfile[]> => {
-  const dbDoctors = await Doctor.find().populate('userId', 'name email').lean();
-
-  if (dbDoctors.length === 0) {
-    return fallbackDoctors;
-  }
-
-  return dbDoctors.map((doc) => mapToProfile(doc));
+  return fallbackDoctors;
 };
 
 export const getDoctorById = async (id: string): Promise<DoctorProfile | null> => {
   if (!id) return null;
 
-  const seeded = fallbackDoctors.find((doctor) => doctor.id === id);
-  if (seeded) {
-    return seeded;
+  const doctor = fallbackDoctors.find((doctor) => doctor.id === id);
+  if (doctor) {
+    return doctor;
   }
 
-  const doc = await Doctor.findById(id).populate('userId', 'name email').lean();
-  if (!doc) {
-    return null;
-  }
-
-  return mapToProfile(doc);
-};
+  return null;
 
 export const createDoctor = async (userId: string, profile: Partial<Omit<IDoctor, 'userId'>>) => {
   const user = await User.findById(userId);

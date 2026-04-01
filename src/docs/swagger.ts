@@ -35,9 +35,20 @@ const options: swaggerJsdoc.Options = {
             name: { type: 'string' },
             email: { type: 'string' },
             role: { type: 'string', enum: ['patient', 'doctor', 'admin', 'caregiver'] },
+            specialization: { type: 'string' },
+            rating: { type: 'number' },
+            reviewCount: { type: 'number' },
+            isAvailable: { type: 'boolean' },
+            consultationFee: { type: 'number' },
+            consultationMethods: {
+              type: 'array',
+              items: { type: 'string', enum: ['Chat', 'Video'] }
+            },
+            avatar: { type: 'string' },
             createdAt: { type: 'string', format: 'date-time' },
           },
         },
+
         UserRegister: {
           type: 'object',
           required: ['name', 'email', 'password'],
